@@ -17,7 +17,7 @@ void sj2_cli__init(void) {
   const char *separator = "--------------------------------------------------------------------------------\r\n";
 
   static app_cli_s sj2_cli_struct;
-  sj2_cli_struct = app_cli__initialize(4, sj2_cli__output_function, separator);
+  sj2_cli_struct = app_cli__initialize(5, sj2_cli__output_function, separator);
 
   // Need static struct that does not go out of scope
   static app_cli__command_s uart3_transmit = {.command_name = "uart3",
@@ -38,11 +38,17 @@ void sj2_cli__init(void) {
                                              "tasklist <time>' will display CPU utilization within this time window.",
                                          .app_cli_handler = cli__task_list};
 
+  static app_cli__command_s taskcontrol = {.command_name = "taskcontrol",
+                                           .help_message_for_command = "Resume or suspend a task.\n"
+                                                                       "taskcontrol <suspend/resume> <task name>",
+                                           .app_cli_handler = cli_suspend_resume_task};
+
   // Add your CLI commands in descending sorted order to make them appear in sorted order
   app_cli__add_command_handler(&sj2_cli_struct, &uart3_transmit);
   app_cli__add_command_handler(&sj2_cli_struct, &task_list);
   app_cli__add_command_handler(&sj2_cli_struct, &i2c);
   app_cli__add_command_handler(&sj2_cli_struct, &crash);
+  app_cli__add_command_handler(&sj2_cli_struct, &taskcontrol);
 
   // In case other tasks are hogging the CPU, it would be useful to run the CLI
   // at high priority to at least be able to see what is going on
