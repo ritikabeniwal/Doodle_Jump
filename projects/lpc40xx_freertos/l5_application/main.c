@@ -5,107 +5,168 @@
 
 #include "board_io.h"
 #include "common_macros.h"
+#include "led_matrix_driver.h"
 #include "periodic_scheduler.h"
 #include "sj2_cli.h"
 
-// 'static' to make these functions 'private' to this file
-static void create_blinky_tasks(void);
-static void create_uart_task(void);
-static void blink_task(void *params);
-static void uart_task(void *params);
+static uint64_t border_data[8] = {0xFE, 0x10, 0x10, 0x10, 0x10, 0x90, 0x90, 0xF0};
+static int num_leds_to_print = 8;
+static int delay_time = 40;
+void left_to_right(int row) {
+  int i;
+  for (int col = 0; col <= 64; col += num_leds_to_print) {
+    i = 0;
+    for (int row_num = row; row_num < num_leds_to_print; row_num++) {
+      led_matrix__set_row_data(row_num, BLUE_COLOR_BIT, border_data[i] << (64 - col));
+      led_matrix__set_row_data(row_num, GREEN_COLOR_BIT, border_data[i] << (64 - col));
+      i++;
+    }
+    delay__ms(delay_time);
+    // led_matrix__update_display();
+  }
+}
+/*
+void top_to_down(int col) {
+  uint64_t to_shift = 64 - col - 1;
+
+  for (int row = 0; row <= 64; row += num_leds_to_print) {
+    for (int row_num = row; row_num < row + num_leds_to_print; row_num++) {
+      led_matrix__set_row_data(row_num, BLUE_COLOR_BIT, border_data << to_shift);
+      led_matrix__set_row_data(row_num, GREEN_COLOR_BIT, border_data << to_shift);
+    }
+    delay__ms(delay_time);
+    for (int row_num = row; row_num < row + num_leds_to_print; row_num++) {
+      led_matrix__set_row_data(row_num, BLUE_COLOR_BIT, 0 << to_shift);
+      led_matrix__set_row_data(row_num, GREEN_COLOR_BIT, 0 << to_shift);
+    }
+  }
+}
+
+void right_to_left(int row) {
+  for (int col = 63; col >= 0; col -= num_leds_to_print) {
+    for (int row_num = row; row_num >= (64 - num_leds_to_print); row_num--) {
+      led_matrix__set_row_data(row_num, BLUE_COLOR_BIT, border_data << (63 - col));
+      led_matrix__set_row_data(row_num, GREEN_COLOR_BIT, border_data << (63 - col));
+    }
+    delay__ms(delay_time);
+    // led_matrix__update_display();
+  }
+}
+
+void down_to_top(int col) {
+  uint64_t to_shift = 63 - num_leds_to_print + 1;
+
+  for (int row = 63; row >= 0; row -= num_leds_to_print) {
+    for (int row_num = row; row_num > row - num_leds_to_print; row_num--) {
+      led_matrix__set_row_data(row_num, BLUE_COLOR_BIT, border_data << to_shift);
+      led_matrix__set_row_data(row_num, GREEN_COLOR_BIT, border_data << to_shift);
+    }
+    delay__ms(delay_time);
+    for (int row_num = row; row_num > row - num_leds_to_print; row_num--) {
+      led_matrix__set_row_data(row_num, BLUE_COLOR_BIT, 0 << to_shift);
+      led_matrix__set_row_data(row_num, GREEN_COLOR_BIT, 0 << to_shift);
+    }
+  }
+}
+*/
+void print_border_pattern() {
+  while (1) {
+    left_to_right(0);
+    //  top_to_down(63);
+    //  right_to_left(63);
+    //  down_to_top(0);
+  }
+}
+// print
+void fill_data_to_print_char(uint8_t *char_to_print, int starting_row, int starting_col) {
+  for (int i = 0; i < 8; i++) {
+    led_matrix__set_row_data(starting_row + i, BLUE_COLOR_BIT, (data_size)char_to_print[i] << (56 - starting_col));
+  }
+}
+void printJ(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0xFE, 0x10, 0x10, 0x10, 0x10, 0x90, 0x90, 0xF0};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+
+void printU(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+
+void printV(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x81, 0xC3, 0x42, 0x66, 0x6C, 0x28, 0x10, 0x00};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+/*
+void printE(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+void printN(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+void printI(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+void printL(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+void printP(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+
+void printR(int starting_row, int starting_col) {
+  uint8_t char_to_print[8] = {0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x};
+  fill_data_to_print_char(char_to_print, starting_row, starting_col);
+}
+*/
+static void led_matrix_task(void *params) {
+  led_matrix_init();
+  while (1) {
+    // led_matrix__set_row_data(8, BLUE_COLOR_BIT, 0x1);
+    // led_matrix__fill_data_buffer(0xF0F0F0F0F0F0F0F0, RED_COLOR_BIT);
+    // Juvenile
+    printJ(20, 24);
+    led_matrix__update_display();
+    printU(20, 32);
+    led_matrix__update_display();
+    printV(20, 40);
+    led_matrix__update_display();
+    /*  printE(20, 24);
+      printN(20, 32);
+      printI(20, 40);
+      printL(20, 48);
+      printE(20, 56);
+      //Jumpers
+      printJ(30, 0);
+      printU(30, 8);
+      printM(30, 16);
+      printP(30, 24);
+      printE(30, 32);
+      printR(30, 40);
+      printS(30, 48);
+  */
+    // led_matrix__update_display();
+    vTaskDelay(1);
+  }
+}
+
+void print_border_pattern_task(void *param) {
+  while (1) {
+    print_border_pattern();
+    vTaskDelay(1);
+  }
+}
 
 int main(void) {
-  create_blinky_tasks();
-  create_uart_task();
-
-  // If you have the ESP32 wifi module soldered on the board, you can try uncommenting this code
-  // See esp32/README.md for more details
-  // uart3_init();                                                                     // Also include:  uart3_init.h
-  // xTaskCreate(esp32_tcp_hello_world_task, "uart3", 1000, NULL, PRIORITY_LOW, NULL); // Include esp32_task.h
-
+  xTaskCreate(led_matrix_task, "led_matrix_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(print_border_pattern_task, "print_border_pattern_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW,
+              NULL);
   puts("Starting RTOS");
   vTaskStartScheduler(); // This function never returns unless RTOS scheduler runs out of memory and fails
-
   return 0;
-}
-
-static void create_blinky_tasks(void) {
-  /**
-   * Use '#if (1)' if you wish to observe how two tasks can blink LEDs
-   * Use '#if (0)' if you wish to use the 'periodic_scheduler.h' that will spawn 4 periodic tasks, one for each LED
-   */
-#if (1)
-  // These variables should not go out of scope because the 'blink_task' will reference this memory
-  static gpio_s led0, led1;
-
-  // If you wish to avoid malloc, use xTaskCreateStatic() in place of xTaskCreate()
-  static StackType_t led0_task_stack[512 / sizeof(StackType_t)];
-  static StackType_t led1_task_stack[512 / sizeof(StackType_t)];
-  static StaticTask_t led0_task_struct;
-  static StaticTask_t led1_task_struct;
-
-  led0 = board_io__get_led0();
-  led1 = board_io__get_led1();
-
-  xTaskCreateStatic(blink_task, "led0", ARRAY_SIZE(led0_task_stack), (void *)&led0, PRIORITY_LOW, led0_task_stack,
-                    &led0_task_struct);
-  xTaskCreateStatic(blink_task, "led1", ARRAY_SIZE(led1_task_stack), (void *)&led1, PRIORITY_LOW, led1_task_stack,
-                    &led1_task_struct);
-#else
-  periodic_scheduler__initialize();
-  UNUSED(blink_task);
-#endif
-}
-
-static void create_uart_task(void) {
-  // It is advised to either run the uart_task, or the SJ2 command-line (CLI), but not both
-  // Change '#if (0)' to '#if (1)' and vice versa to try it out
-#if (0)
-  // printf() takes more stack space, size this tasks' stack higher
-  xTaskCreate(uart_task, "uart", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-#else
-  sj2_cli__init();
-  UNUSED(uart_task); // uart_task is un-used in if we are doing cli init()
-#endif
-}
-
-static void blink_task(void *params) {
-  const gpio_s led = *((gpio_s *)params); // Parameter was input while calling xTaskCreate()
-
-  // Warning: This task starts with very minimal stack, so do not use printf() API here to avoid stack overflow
-  while (true) {
-    gpio__toggle(led);
-    vTaskDelay(500);
-  }
-}
-
-// This sends periodic messages over printf() which uses system_calls.c to send them to UART0
-static void uart_task(void *params) {
-  TickType_t previous_tick = 0;
-  TickType_t ticks = 0;
-
-  while (true) {
-    // This loop will repeat at precise task delay, even if the logic below takes variable amount of ticks
-    vTaskDelayUntil(&previous_tick, 2000);
-
-    /* Calls to fprintf(stderr, ...) uses polled UART driver, so this entire output will be fully
-     * sent out before this function returns. See system_calls.c for actual implementation.
-     *
-     * Use this style print for:
-     *  - Interrupts because you cannot use printf() inside an ISR
-     *    This is because regular printf() leads down to xQueueSend() that might block
-     *    but you cannot block inside an ISR hence the system might crash
-     *  - During debugging in case system crashes before all output of printf() is sent
-     */
-    ticks = xTaskGetTickCount();
-    fprintf(stderr, "%u: This is a polled version of printf used for debugging ... finished in", (unsigned)ticks);
-    fprintf(stderr, " %lu ticks\n", (xTaskGetTickCount() - ticks));
-
-    /* This deposits data to an outgoing queue and doesn't block the CPU
-     * Data will be sent later, but this function would return earlier
-     */
-    ticks = xTaskGetTickCount();
-    printf("This is a more efficient printf ... finished in");
-    printf(" %lu ticks\n\n", (xTaskGetTickCount() - ticks));
-  }
 }
