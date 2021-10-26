@@ -1,27 +1,176 @@
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "FreeRTOS.h"
-#include "task.h"
-
+#include "acceleration.h"
 #include "board_io.h"
 #include "common_macros.h"
+#include "event_groups.h"
+#include "ff.h"
+#include "gpio.h"
+#include "lpc40xx.h"
+#include "lpc_peripherals.h"
 #include "periodic_scheduler.h"
+#include "semphr.h"
 #include "sj2_cli.h"
+#include "task.h"
+#define MAX_SIZE 20
 
-// 'static' to make these functions 'private' to this file
-static void create_blinky_tasks(void);
-static void create_uart_task(void);
-static void blink_task(void *params);
-static void uart_task(void *params);
+#define PRODUCER_WAIT_BITS (1 << 0)
+#define CONSUMER_WAIT_BITS (1 << 1)
+#define WATCHDOG_FIRED_BOTH_TASKS 0
+#define WATCHDOG_FIRED_PRODUCER 1
+#define WATCHDOG_FIRED_CONSUMER 2
+
+static SemaphoreHandle_t file_mutex;
+static EventGroupHandle_t event_group;
+static QueueHandle_t accelerator_queue;
+static acceleration__axis_data_s consumer_sensor_value[100];
+static const char *filename = "sensor.txt";
+
+void write_watchdog_error_in_file(int event) {
+  FIL file; // File handle
+  UINT bytes_written = 0;
+  FRESULT result = f_open(&file, filename, (FA_WRITE | FA_OPEN_APPEND));
+
+  if (FR_OK == result) {
+    char string[100];
+    if (event == WATCHDOG_FIRED_BOTH_TASKS) {
+      sprintf(string, "Time %li: WatchDog Fired for both Producer and Consumer\n", xTaskGetTickCount());
+    } else if (event == WATCHDOG_FIRED_PRODUCER) {
+      sprintf(string, "Time %li: WatchDog Fired for both Producer\n", xTaskGetTickCount());
+
+    } else if (event == WATCHDOG_FIRED_CONSUMER) {
+      sprintf(string, "Time %li: WatchDog Fired for both Consumer\n", xTaskGetTickCount());
+    }
+    (void)xSemaphoreTake(file_mutex, portMAX_DELAY);
+    if (FR_OK == f_write(&file, string, strlen(string), &bytes_written)) {
+    } else {
+      printf("ERROR: Failed to write data to file\n");
+    }
+    xSemaphoreGive(file_mutex);
+
+    f_close(&file);
+  } else {
+    printf("Failed to open file\n");
+  }
+}
+
+void write_file_using_fatfs_pi(acceleration__axis_data_s *val) {
+
+  FIL file; // File handle
+  UINT bytes_written = 0;
+  FRESULT result = f_open(&file, filename, (FA_WRITE | FA_OPEN_APPEND));
+
+  if (FR_OK == result) {
+    char string[256];
+    int offset = 0;
+    for (int i = 0; i < MAX_SIZE; i++) {
+      sprintf(string + offset, "Time %li, x:%i x:%i x:%i\n", xTaskGetTickCount(), val[i].x, val[i].y, val[i].z);
+      offset = strlen(string);
+    }
+
+    (void)xSemaphoreTake(file_mutex, portMAX_DELAY);
+    if (FR_OK == f_write(&file, string, strlen(string), &bytes_written)) {
+    } else {
+      printf("ERROR: Failed to write data to file\n");
+    }
+    xSemaphoreGive(file_mutex);
+
+    f_close(&file);
+  } else {
+    printf("ERROR: Failed to open: %s\n", filename);
+  }
+}
+
+void producer_of_accelerator_sensor(void *p) {
+
+  while (1) {
+    int i = 0;
+    acceleration__axis_data_s sensor_value;
+    acceleration__axis_data_s result = {0};
+
+    sensor_value = acceleration__get_data();
+
+    for (i = 0; i < 100; i++) {
+
+      result.x = result.x + sensor_value.x;
+      result.y = result.x + sensor_value.y;
+      result.z = result.x + sensor_value.z;
+    }
+
+    sensor_value.x = result.x / 100;
+    sensor_value.y = result.y / 100;
+    sensor_value.z = result.z / 100;
+
+    xQueueSend(accelerator_queue, &sensor_value, 0);
+    //  printf("Sent: %i, %i, %i\n", sensor_value.x, sensor_value.y, sensor_value.z);
+
+    i = 0;
+    result.x = 0;
+    result.y = 0;
+    result.z = 0;
+    vTaskDelay(100);
+    xEventGroupSetBits(event_group, PRODUCER_WAIT_BITS);
+  }
+}
+
+void consumer_of_accelerator_sensor(void *p) {
+
+  while (1) {
+
+    acceleration__axis_data_s accelerator_sensor_value;
+    static int i = 0;
+    if (!xQueueReceive(accelerator_queue, &accelerator_sensor_value, portMAX_DELAY))
+      ;
+    //    printf("Received: %i %i %i\n", accelerator_sensor_value.x, accelerator_sensor_value.y,
+    //    accelerator_sensor_value.z);
+    consumer_sensor_value[i] = accelerator_sensor_value;
+
+    if (i == MAX_SIZE) {
+      i = 0;
+      //      write_file_using_fatfs_pi(consumer_sensor_value);
+    }
+    i++;
+    xEventGroupSetBits(event_group, CONSUMER_WAIT_BITS);
+  }
+}
+
+void watchdog_task(void *params) {
+  EventBits_t watch_dog_event_bits;
+  while (1) {
+    watch_dog_event_bits =
+        xEventGroupWaitBits(event_group, PRODUCER_WAIT_BITS | CONSUMER_WAIT_BITS, pdTRUE, pdTRUE, 200);
+    if ((watch_dog_event_bits & (PRODUCER_WAIT_BITS | CONSUMER_WAIT_BITS)) == 0) {
+      // log both of them failed
+      printf("WatchDog fired for both Consumer and Producer Tasks\n");
+      write_watchdog_error_in_file(WATCHDOG_FIRED_BOTH_TASKS);
+    } else if ((watch_dog_event_bits & PRODUCER_WAIT_BITS) == 0) {
+      // log producer hit watchdog
+      printf("WatchDog fired for Producer Task\n");
+      write_watchdog_error_in_file(WATCHDOG_FIRED_PRODUCER);
+    } else if ((watch_dog_event_bits & CONSUMER_WAIT_BITS) == 0) {
+      // log consumer hit watchdog
+      printf("WatchDog fired for Consumer Task\n");
+      write_watchdog_error_in_file(WATCHDOG_FIRED_CONSUMER);
+    } else {
+    }
+    vTaskDelay(1000);
+  }
+}
 
 int main(void) {
-  create_blinky_tasks();
-  create_uart_task();
+  acceleration__init();
+  event_group = xEventGroupCreate();
 
-  // If you have the ESP32 wifi module soldered on the board, you can try uncommenting this code
-  // See esp32/README.md for more details
-  // uart3_init();                                                                     // Also include:  uart3_init.h
-  // xTaskCreate(esp32_tcp_hello_world_task, "uart3", 1000, NULL, PRIORITY_LOW, NULL); // Include esp32_task.h
+  file_mutex = xSemaphoreCreateMutex();
+  accelerator_queue = xQueueCreate(MAX_SIZE, sizeof(acceleration__axis_data_s));
+
+  xTaskCreate(producer_of_accelerator_sensor, "Producer", 2048 / sizeof(void *), NULL, PRIORITY_MEDIUM, NULL);
+  xTaskCreate(consumer_of_accelerator_sensor, "Consumer", 2048 / sizeof(void *), NULL, PRIORITY_MEDIUM, NULL);
+  xTaskCreate(watchdog_task, "WatchDog", 2048 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
 
   puts("Starting RTOS");
   sj2_cli__init();
@@ -30,83 +179,4 @@ int main(void) {
   return 0;
 }
 
-static void create_blinky_tasks(void) {
-  /**
-   * Use '#if (1)' if you wish to observe how two tasks can blink LEDs
-   * Use '#if (0)' if you wish to use the 'periodic_scheduler.h' that will spawn 4 periodic tasks, one for each LED
-   */
-#if (1)
-  // These variables should not go out of scope because the 'blink_task' will reference this memory
-  static gpio_s led0, led1;
-
-  // If you wish to avoid malloc, use xTaskCreateStatic() in place of xTaskCreate()
-  static StackType_t led0_task_stack[512 / sizeof(StackType_t)];
-  static StackType_t led1_task_stack[512 / sizeof(StackType_t)];
-  static StaticTask_t led0_task_struct;
-  static StaticTask_t led1_task_struct;
-
-  led0 = board_io__get_led0();
-  led1 = board_io__get_led1();
-
-  xTaskCreateStatic(blink_task, "led0", ARRAY_SIZE(led0_task_stack), (void *)&led0, PRIORITY_LOW, led0_task_stack,
-                    &led0_task_struct);
-  xTaskCreateStatic(blink_task, "led1", ARRAY_SIZE(led1_task_stack), (void *)&led1, PRIORITY_LOW, led1_task_stack,
-                    &led1_task_struct);
-#else
-  periodic_scheduler__initialize();
-  UNUSED(blink_task);
-#endif
-}
-
-static void create_uart_task(void) {
-  // It is advised to either run the uart_task, or the SJ2 command-line (CLI), but not both
-  // Change '#if (0)' to '#if (1)' and vice versa to try it out
-#if (0)
-  // printf() takes more stack space, size this tasks' stack higher
-  xTaskCreate(uart_task, "uart", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-#else
-  sj2_cli__init();
-  UNUSED(uart_task); // uart_task is un-used in if we are doing cli init()
-#endif
-}
-
-static void blink_task(void *params) {
-  const gpio_s led = *((gpio_s *)params); // Parameter was input while calling xTaskCreate()
-
-  // Warning: This task starts with very minimal stack, so do not use printf() API here to avoid stack overflow
-  while (true) {
-    gpio__toggle(led);
-    vTaskDelay(500);
-  }
-}
-
 // This sends periodic messages over printf() which uses system_calls.c to send them to UART0
-static void uart_task(void *params) {
-  TickType_t previous_tick = 0;
-  TickType_t ticks = 0;
-
-  while (true) {
-    // This loop will repeat at precise task delay, even if the logic below takes variable amount of ticks
-    vTaskDelayUntil(&previous_tick, 2000);
-
-    /* Calls to fprintf(stderr, ...) uses polled UART driver, so this entire output will be fully
-     * sent out before this function returns. See system_calls.c for actual implementation.
-     *
-     * Use this style print for:
-     *  - Interrupts because you cannot use printf() inside an ISR
-     *    This is because regular printf() leads down to xQueueSend() that might block
-     *    but you cannot block inside an ISR hence the system might crash
-     *  - During debugging in case system crashes before all output of printf() is sent
-     */
-    ticks = xTaskGetTickCount();
-    fprintf(stderr, "%u: This is a polled version of printf used for debugging ... finished in", (unsigned)ticks);
-    fprintf(stderr, " %lu ticks\n", (xTaskGetTickCount() - ticks));
-
-    /* This deposits data to an outgoing queue and doesn't block the CPU
-     * Data will be sent later, but this function would return earlier
-     */
-    ticks = xTaskGetTickCount();
-    printf("This is a more efficient printf ... finished in");
-    printf(" %lu ticks\n\n", (xTaskGetTickCount() - ticks));
-  }
-}
