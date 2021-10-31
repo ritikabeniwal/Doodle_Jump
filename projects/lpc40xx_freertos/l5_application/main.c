@@ -6,6 +6,7 @@
 #include "board_io.h"
 #include "common_macros.h"
 #include "led_matrix_driver.h"
+#include "led_matrix_tasks.h"
 #include "periodic_scheduler.h"
 #include "sj2_cli.h"
 
@@ -163,9 +164,10 @@ void print_border_pattern_task(void *param) {
 }
 
 int main(void) {
-  xTaskCreate(led_matrix_task, "led_matrix_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-  xTaskCreate(print_border_pattern_task, "print_border_pattern_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW,
-              NULL);
+  // xTaskCreate(led_matrix_task, "led_matrix_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  // xTaskCreate(print_border_pattern_task, "print_border_pattern_task", (512U * 8) / sizeof(void *), NULL,
+  // PRIORITY_LOW, NULL);
+  create_led_matrix_tasks();
   puts("Starting RTOS");
   vTaskStartScheduler(); // This function never returns unless RTOS scheduler runs out of memory and fails
   return 0;

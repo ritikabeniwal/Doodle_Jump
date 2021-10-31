@@ -5,6 +5,9 @@
 
 #define data_size uint64_t
 
+#define TOTAL_LED_MATRIX_ROWS 64
+#define NUM_LED_MATRIX_PLANES 3
+
 typedef enum { // RGB (000 => Off)
   OFF,
   BLUE,
