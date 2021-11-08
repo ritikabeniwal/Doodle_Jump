@@ -6,7 +6,10 @@
 #define data_size uint64_t
 
 #define TOTAL_LED_MATRIX_ROWS 64
+#define TOTAL_LED_MATRIX_COLS 64
 #define NUM_LED_MATRIX_PLANES 3
+#define LED_MATRIX_SCAN_RATE_FACTOR 32
+extern data_size frame_buffer[TOTAL_LED_MATRIX_ROWS][NUM_LED_MATRIX_PLANES];
 
 typedef enum { // RGB (000 => Off)
   OFF,
@@ -20,16 +23,9 @@ typedef enum { // RGB (000 => Off)
   FILL
 } led_matrix__color_e;
 
-typedef enum { RED_PLANE, GREEN_PLANE, BLUE_PLANE, FRIEND_PLANE, ENEMY_PLANE, LIFE_PLANE } led_matrix__color_plane_e;
+typedef enum { RED_PLANE, GREEN_PLANE, BLUE_PLANE } led_matrix__color_plane_e;
 
 typedef enum { BLUE_COLOR_BIT = 0x1, GREEN_COLOR_BIT = 0x2, RED_COLOR_BIT = 0x4 } led_pixel_color_bit_e;
-
-/**
- * 2 Dimensional array of 64 bits (each bit correspond to columns in a given row)
- * row of array -> Row of LED matrix
- * columns of array -> color bit of each pixel (R/G/B)
- */
-data_size frame_buffer[64][6];
 
 /**
  * Initializes all assigned GPIOs for LED matrix

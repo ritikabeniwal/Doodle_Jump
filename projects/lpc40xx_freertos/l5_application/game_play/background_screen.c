@@ -4,12 +4,14 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "background_screen.h"
 #include "board_io.h"
 #include "common_macros.h"
+#include "game_start_stop.h"
 #include "led_matrix_driver.h"
-#include "led_matrix_tasks.h"
 #include "periodic_scheduler.h"
 #include "sj2_cli.h"
+
 #define SLAB_LENGTH 8
 #define MIN_SLAB_GAP 4
 #define MAX_SLAB_GAP 8
@@ -18,6 +20,7 @@
 #define BACKGROUND_ROW_START 8
 #define BACKGROUND_ROW_END 56
 #define BACKGROUND_ROW_JUMP 8
+#define BACKGROUND_SCREEN_TASK "bg_task"
 
 static data_size background_buffer[TOTAL_LED_MATRIX_ROWS];
 
@@ -71,19 +74,23 @@ static void background_screen_task() {
   srand(xTaskGetTickCount());
   initialize_background_screen();
   while (1) {
-    update_background_screen();
-    vTaskDelay(2000);
+    if (game_started) {
+      update_background_screen();
+      vTaskDelay(2000);
+    }
   }
 }
 
-static void display_task() {
-  while (1) {
-    led_matrix__update_display();
-    vTaskDelay(10);
-  }
+void stop_background_tasks() {
+  TaskHandle_t task_handle = xTaskGetHandle(BACKGROUND_SCREEN_TASK);
+  vTaskSuspend(task_handle);
 }
-void create_led_matrix_tasks(void) {
-  led_matrix_init();
-  xTaskCreate(background_screen_task, "background_screen", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-  xTaskCreate(display_task, "display_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+
+void resume_background_tasks() {
+  TaskHandle_t task_handle = xTaskGetHandle(BACKGROUND_SCREEN_TASK);
+  vTaskResume(task_handle);
+}
+
+void create_background_screen_tasks(void) {
+  xTaskCreate(background_screen_task, BACKGROUND_SCREEN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
 }

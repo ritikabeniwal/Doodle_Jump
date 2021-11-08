@@ -4,6 +4,8 @@
 #include "lpc40xx.h"
 #include "lpc_peripherals.h"
 
+data_size frame_buffer[TOTAL_LED_MATRIX_ROWS][NUM_LED_MATRIX_PLANES];
+
 /**
  * r0,g0,b0 --> for first  32 rows
  * r1,g1,b1 --> for second 32 rows
@@ -150,35 +152,20 @@ void led_matrix__update_display() {
     led_matrix__disable_latch();
     led_matrix__select_row(i); // will select i and i + 32 rows at same time
 
-    for (int j = 63; j >= 0; j--) { // shift data with MSB getting shifted-in first
+    for (int j = TOTAL_LED_MATRIX_COLS; j >= 0; j--) { // shift data with MSB getting shifted-in first
       ((frame_buffer[i][RED_PLANE] >> j) & 1) ? gpio__set(r0) : gpio__reset(r0);
       ((frame_buffer[i][GREEN_PLANE] >> j) & 1) ? gpio__set(g0) : gpio__reset(g0);
       ((frame_buffer[i][BLUE_PLANE] >> j) & 1) ? gpio__set(b0) : gpio__reset(b0);
-      // if ((frame_buffer[i][RED_PLANE] >> j) || (frame_buffer[i][GREEN_PLANE] >> j) ||
-      //     (frame_buffer[i][BLUE_PLANE] >> j))
-      //   printf("1");
-      ((frame_buffer[i + 32][RED_PLANE] >> j) & 1) ? gpio__set(r1) : gpio__reset(r1);
-      ((frame_buffer[i + 32][GREEN_PLANE] >> j) & 1) ? gpio__set(g1) : gpio__reset(g1);
-      ((frame_buffer[i + 32][BLUE_PLANE] >> j) & 1) ? gpio__set(b1) : gpio__reset(b1);
-      // if ((frame_buffer[i + 32][RED_PLANE] >> j) || (frame_buffer[i + 32][GREEN_PLANE] >> j) ||
-      //     (frame_buffer[i + 32][BLUE_PLANE] >> j))
-      //   printf("1");
+
+      ((frame_buffer[i + LED_MATRIX_SCAN_RATE_FACTOR][RED_PLANE] >> j) & 1) ? gpio__set(r1) : gpio__reset(r1);
+      ((frame_buffer[i + LED_MATRIX_SCAN_RATE_FACTOR][GREEN_PLANE] >> j) & 1) ? gpio__set(g1) : gpio__reset(g1);
+      ((frame_buffer[i + LED_MATRIX_SCAN_RATE_FACTOR][BLUE_PLANE] >> j) & 1) ? gpio__set(b1) : gpio__reset(b1);
       gpio__set(clk);
       gpio__reset(clk); // shift in all 3 color bits at once for top half/bottom half registers
-      led_matrix__enable_latch();
-      led_matrix__disable_latch();
     }
-    // printf("\n");
-    // at this point, all 3 shift registers should be filled with corresponding row data in frame_buffer
     led_matrix__enable_latch(); // push shift register contents down to output registers
     led_matrix__enable_display();
     delay__us(50);
   }
-  // fprintf(stderr, "-------------------\n");
   led_matrix__disable_display();
 }
-
-/*void print_digits() {
-  for (uint8_t i = 0; i < 8; i++) {
-  led_matrix__set_row_data(i, 1, digits[8][i]);
-  }*/
