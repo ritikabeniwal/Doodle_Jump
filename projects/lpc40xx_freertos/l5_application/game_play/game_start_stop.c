@@ -2,6 +2,7 @@
 #include "FreeRTOS.h"
 #include "background_screen.h"
 #include "gpio.h"
+#include "jumper.h"
 #include "task.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -73,6 +74,7 @@ void start_game() {
   if (first_time) {
     create_start_stop_task();
     create_background_screen_tasks();
+    create_jumper_tasks();
     first_time = 0;
   } else {
     // restart_game();

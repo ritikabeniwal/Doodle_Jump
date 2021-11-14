@@ -119,6 +119,12 @@ void led_matrix__set_pixel(int row, int column, led_matrix__color_e color) {
   }
 }
 
+void led_matrix__set_row_till_from_col(int row, int first_col, int num_cols, led_matrix__color_e color) {
+  for (int i = first_col; i < (first_col + num_cols); i++) {
+    led_matrix__set_pixel(row, i, color);
+  }
+}
+
 void led_matrix__set_row_data(int row, led_matrix__color_e color, data_size data) {
   if (color & BLUE_COLOR_BIT) {
     frame_buffer[row][BLUE_PLANE] = data;

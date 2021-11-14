@@ -22,7 +22,12 @@
 #define BACKGROUND_ROW_JUMP 8
 #define BACKGROUND_SCREEN_TASK "bg_task"
 
-static data_size background_buffer[TOTAL_LED_MATRIX_ROWS];
+data_size background_buffer[TOTAL_LED_MATRIX_ROWS];
+
+int get_last_background_row(data_size *return_data) {
+  *return_data = background_buffer[BACKGROUND_ROW_END];
+  return (int)BACKGROUND_ROW_END;
+}
 
 static void set_random_slabs_in_row(int row) {
   uint8_t previous_slab_end_index = 0;
@@ -76,7 +81,7 @@ static void background_screen_task() {
   while (1) {
     if (game_started) {
       update_background_screen();
-      vTaskDelay(2000);
+      vTaskDelay(100);
     }
   }
 }
