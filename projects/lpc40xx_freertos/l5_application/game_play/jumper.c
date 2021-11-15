@@ -53,6 +53,21 @@ void jumper_task() {
   }
 }
 
+void jumper_display_on_start_screen(int row, int col) {
+  for (int i = 0; i < 4; i++) {
+    vTaskDelay(100);
+    clear_jumper((row), col);
+    draw_jumper(row - (i * 2), col);
+    row = row - (i * 2);
+  }
+  for (int i = 0; i < 4; i++) {
+    vTaskDelay(100);
+    clear_jumper(row, col);
+    draw_jumper(row + (i * 2), col);
+    row = row + (i * 2);
+  }
+}
+
 void create_jumper_tasks() {
   xTaskCreate(jumper_task, JUMPER_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
 }

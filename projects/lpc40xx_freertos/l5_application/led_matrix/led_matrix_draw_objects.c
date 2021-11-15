@@ -4,7 +4,10 @@
 #define JUMPER_LENGTH 4
 uint8_t jumper[JUMPER_LENGTH] = {0xF, 0xF, 0xF, 0xF};
 uint8_t jumper_color[JUMPER_LENGTH][JUMPER_WIDTH] = {
-    YELLOW, GREEN, BLUE, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN,
+    {YELLOW, GREEN, BLUE, GREEN},
+    {GREEN, CYAN, CYAN, GREEN},
+    {BLUE, GREEN, GREEN, YELLOW},
+    {GREEN, CYAN, CYAN, GREEN},
 };
 
 void draw_jumper(int row, int col) {
@@ -26,4 +29,8 @@ void clear_jumper(int row, int col) {
       }
     }
   }
+}
+void led_matrtix_draw_objects_print_start_screen() {
+  led_matrix_draw_alphabets_print_string("JUVENILE", 15, 8, GREEN);
+  led_matrix_draw_alphabets_print_string("JUMPERS", 25, 11, CYAN);
 }

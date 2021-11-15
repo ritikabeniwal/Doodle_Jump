@@ -1,1 +1,71 @@
 #include "led_matrix_draw_alphabets.h"
+
+//#define PRINT_DEBUG
+
+#define ALPHABET_WIDTH 5
+#define ALPHABET_HEIGHT 5
+#define ALPHABET_COL_MASK 0x1F
+
+static const char alphabets[26][ALPHABET_HEIGHT] = {
+    {0xFF, 0xFF, 0xFF, 0xFF, 0XFF}, // A
+    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // B
+    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // C
+    {0xFF, 0xFF, 0xFF, 0xFF, 0XFF}, // D
+    {0x1F, 0x10, 0x1E, 0x10, 0x1F}, // E
+    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // F
+    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // G
+    {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // H
+    {0x1F, 0x4, 0x4, 0x4, 0x1F},    // I
+    {0x1F, 0x4, 0x4, 0x14, 0x1C},   // J
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // K
+    {0x10, 0x10, 0x10, 0x10, 0X1F}, // L
+    {0x11, 0x1B, 0x15, 0x11, 0x11}, // M
+    {0x11, 0x19, 0x15, 0x13, 0x11}, // N
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // O
+    {0x1F, 0x11, 0x1F, 0x10, 0x10}, // P
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // Q
+    {0x1F, 0x11, 0x1F, 0x16, 0x12}, // R
+    {0x1F, 0x10, 0x1F, 0x01, 0x1F}, // S
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // T
+    {0x11, 0x11, 0x11, 0x11, 0xF},  // U
+    {0x11, 0x11, 0x11, 0xA, 0x4},   // V
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // W
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // X
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // Y
+    {0xF, 0x2, 0xA, 0x7, 0xFF},     // Z
+};
+void led_matrix_print_alphabet(char char_to_display, int row, int col) {}
+
+void led_matrix_draw_alphabets_print_string(char *str, int row, int col, led_matrix__color_e color) {
+  char to_display;
+  data_size row_data = 0;
+  int temp_col = col;
+  for (int i = 0; i < ALPHABET_HEIGHT; i++) {
+    for (int j = 0; j < strlen(str); j++) {
+      to_display = str[j];
+
+#ifdef PRINT_DEBUG
+      fprintf(stderr, "temp col = %d\n", temp_col);
+      fprintf(stderr, "to_display = %c, %d\n", to_display, to_display - 65);
+#endif
+      if (to_display == ' ') {
+        row_data |= ((((data_size)0)) << (63 - ALPHABET_WIDTH - temp_col));
+        temp_col += 1;
+      } else {
+        row_data |=
+            ((((data_size)alphabets[to_display - 65][i] & ALPHABET_COL_MASK)) << (63 - ALPHABET_WIDTH - temp_col));
+        temp_col += ALPHABET_WIDTH + 1;
+      }
+#ifdef PRINT_DEBUG
+      fprintf(stderr, "alphabet value = %d row data = %d, temp col = %d\n", (alphabets[to_display - 65][i]), row_data,
+              temp_col);
+#endif
+    }
+#ifdef PRINT_DEBUG
+    fprintf(stderr, "row data set for row = %d col = %d\n", row + i, col);
+#endif
+    led_matrix__set_row_data(row + i, color, row_data);
+    row_data = 0;
+    temp_col = col;
+  }
+}
