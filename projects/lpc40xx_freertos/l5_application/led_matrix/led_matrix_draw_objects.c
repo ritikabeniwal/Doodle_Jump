@@ -1,13 +1,11 @@
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
-#define JUMPER_WIDTH 4
-#define JUMPER_LENGTH 4
-uint8_t jumper[JUMPER_LENGTH] = {0xF, 0xF, 0xF, 0xF};
+#define JUMPER_WIDTH 5
+#define JUMPER_LENGTH 5
+uint8_t jumper[JUMPER_LENGTH] = {0xE, 0x1F, 0x1F, 0x1F, 0xE};
 uint8_t jumper_color[JUMPER_LENGTH][JUMPER_WIDTH] = {
-    {YELLOW, GREEN, BLUE, GREEN},
-    {GREEN, CYAN, CYAN, GREEN},
-    {BLUE, GREEN, GREEN, YELLOW},
-    {GREEN, CYAN, CYAN, GREEN},
+    {OFF, YELLOW, YELLOW, YELLOW, OFF},  {YELLOW, YELLOW, RED, RED, YELLOW}, {YELLOW, YELLOW, YELLOW, YELLOW, YELLOW},
+    {GREEN, GREEN, GREEN, GREEN, GREEN}, {OFF, BLUE, BLUE, BLUE, OFF},
 };
 
 void draw_jumper(int row, int col) {
@@ -16,6 +14,7 @@ void draw_jumper(int row, int col) {
     for (int j = JUMPER_WIDTH - 1; j >= 0; j--) {
       if (jumper[i] & (1 << j)) {
         led_matrix__set_pixel(row - i, j + col, jumper_color[i][j]);
+        // led_matrix__set_pixel(row + i, j + col, jumper_color[i][j]);
       }
     }
   }
@@ -26,6 +25,7 @@ void clear_jumper(int row, int col) {
     for (int j = JUMPER_WIDTH - 1; j >= 0; j--) {
       if (jumper[i] & (1 << j)) {
         led_matrix__clear_pixel(row - i, j + col);
+        // led_matrix__clear_pixel(row + i, j + col);
       }
     }
   }

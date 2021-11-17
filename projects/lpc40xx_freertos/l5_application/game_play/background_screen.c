@@ -22,6 +22,9 @@
 #define BACKGROUND_ROW_JUMP 8
 #define BACKGROUND_SCREEN_TASK "bg_task"
 
+// TODO: Check this in a different function
+bool collision_detected = 0;
+
 data_size background_buffer[TOTAL_LED_MATRIX_ROWS];
 
 int get_last_background_row(data_size *return_data) {
@@ -73,7 +76,19 @@ static void shift_background_screen_down() {
   set_random_slabs_in_row(BACKGROUND_ROW_START);
 }
 
-static void update_background_screen() { shift_background_screen_down(); }
+static void print_current_background_buffer() {
+  for (int i = BACKGROUND_ROW_END; i >= BACKGROUND_ROW_START; i -= BACKGROUND_ROW_JUMP) {
+    led_matrix__set_row_data(i, RED_COLOR_BIT, background_buffer[i]);
+  }
+}
+
+static void update_background_screen() {
+  if (collision_detected) {
+    shift_background_screen_down();
+  } else {
+    print_current_background_buffer();
+  }
+}
 
 static void background_screen_task() {
   srand(xTaskGetTickCount());
