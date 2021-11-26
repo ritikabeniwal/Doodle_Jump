@@ -6,7 +6,15 @@
 #include <stdbool.h>
 #define JUMPER_TASK "jumper"
 
-static bool find_initial_jumper_position(int *row, int *col) {
+data_size get_jumper_row_data(int col) {
+  data_size row_data = 0;
+  for (int i = col; i < (col + JUMPER_WIDTH); i++) {
+    row_data |= (1 << i);
+  }
+  return row_data;
+}
+
+bool find_initial_jumper_position(int *row, int *col) {
   data_size last_bckground_row_data;
   fprintf(stderr, "Calling\n");
   int last_backround_row = get_last_background_row(&last_bckground_row_data);
@@ -34,6 +42,7 @@ void jumper_task() {
       draw_jumper(row, col);
       break;
     }
+
     vTaskDelay(100);
   }
   clear_jumper((row), col);

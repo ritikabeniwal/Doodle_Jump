@@ -20,12 +20,12 @@ static gpio_s play_button_gpio;
 static int start_game_button = 0;
 
 static void check_play_button_status_task() {
-  play_button_gpio.port_number = GPIO__PORT_0;
-  play_button_gpio.pin_number = 29;
+  play_button_gpio.port_number = GPIO__PORT_1;
+  play_button_gpio.pin_number = 31;
   gpio__construct_with_function(play_button_gpio.port_number, play_button_gpio.pin_number, 0);
   gpio__construct_as_input(play_button_gpio.port_number, play_button_gpio.pin_number);
   while (1) {
-    if (gpio__get(play_button_gpio)) {
+    if (!gpio__get(play_button_gpio)) {
       fprintf(stderr, "Gpio set\n");
       start_game_button = 1;
     }
@@ -97,9 +97,10 @@ static void restart_game() {
 
 void start_game() {
   if (first_time) {
-    create_start_stop_task();
-    create_background_screen_tasks();
-    create_jumper_tasks();
+    // create_start_stop_task();
+    // create_background_screen_tasks();
+    // create_jumper_tasks();
+    create_game_play_task();
     first_time = 0;
   } else {
     // restart_game();

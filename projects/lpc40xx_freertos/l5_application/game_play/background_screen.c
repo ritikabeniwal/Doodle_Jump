@@ -23,9 +23,25 @@
 #define BACKGROUND_SCREEN_TASK "bg_task"
 
 // TODO: Check this in a different function
-bool collision_detected = 0;
 
 data_size background_buffer[TOTAL_LED_MATRIX_ROWS];
+
+bool detect_collision_background_screen(int row, int col) {
+  data_size background_row_data = background_buffer[row];
+  data_size jumper_row_data;
+  if (background_row_data == 0) {
+    return 0;
+  }
+
+  jumper_row_data = get_jumper_row_data(col);
+
+  if (jumper_row_data & background_row_data) {
+    return 1;
+  }
+  return 0;
+}
+
+int get_last_background_screen_row() { return BACKGROUND_ROW_END; }
 
 int get_last_background_row(data_size *return_data) {
   *return_data = background_buffer[BACKGROUND_ROW_END];
@@ -62,13 +78,18 @@ static void set_random_slabs_in_row(int row) {
   }
 }
 
-static void initialize_background_screen() {
+void initialize_background_screen() {
   for (int i = BACKGROUND_ROW_END; i >= BACKGROUND_ROW_START; i -= BACKGROUND_ROW_JUMP) {
     set_random_slabs_in_row(i);
   }
 }
 
-static void shift_background_screen_down() {
+void shift_background_screen_down(int row) {
+
+  if (row >= BACKGROUND_ROW_END) {
+    return;
+  }
+
   for (int i = BACKGROUND_ROW_END; i > BACKGROUND_ROW_START; i -= BACKGROUND_ROW_JUMP) {
     background_buffer[i] = background_buffer[i - BACKGROUND_ROW_JUMP];
     led_matrix__set_row_data(i, RED_COLOR_BIT, background_buffer[i]);
@@ -82,9 +103,9 @@ static void print_current_background_buffer() {
   }
 }
 
-static void update_background_screen() {
+void update_background_screen(bool collision_detected) {
   if (collision_detected) {
-    shift_background_screen_down();
+    shift_background_screen_down(48);
   } else {
     print_current_background_buffer();
   }
@@ -95,7 +116,7 @@ static void background_screen_task() {
   initialize_background_screen();
   while (1) {
     if (game_started) {
-      update_background_screen();
+      update_background_screen(0);
       vTaskDelay(100);
     }
   }
