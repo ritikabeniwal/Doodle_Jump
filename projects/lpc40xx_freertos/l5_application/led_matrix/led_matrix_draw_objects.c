@@ -1,5 +1,7 @@
 #include "led_matrix_draw_objects.h"
+#include "led_matrix_draw_alphabets.h"
 #include "led_matrix_driver.h"
+
 uint8_t jumper[JUMPER_LENGTH] = {0xE, 0x1F, 0x1F, 0x1F, 0xE};
 uint8_t jumper_color[JUMPER_LENGTH][JUMPER_WIDTH] = {
     {OFF, YELLOW, YELLOW, YELLOW, OFF},  {YELLOW, YELLOW, RED, RED, YELLOW}, {YELLOW, YELLOW, YELLOW, YELLOW, YELLOW},
@@ -7,7 +9,6 @@ uint8_t jumper_color[JUMPER_LENGTH][JUMPER_WIDTH] = {
 };
 
 void draw_jumper(int row, int col) {
-  data_size jumper_data;
   for (int i = 0; i < JUMPER_LENGTH; i++) {
     for (int j = JUMPER_WIDTH - 1; j >= 0; j--) {
       if (jumper[i] & (1 << j)) {

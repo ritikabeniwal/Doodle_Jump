@@ -6,14 +6,15 @@
 #include "board_io.h"
 #include "common_macros.h"
 #include "game_start_stop.h"
+#include "joystick.h"
 #include "led_matrix_driver.h"
 #include "led_matrix_tasks.h"
 #include "periodic_scheduler.h"
 #include "sj2_cli.h"
-
 int main(void) {
   create_led_matrix_tasks();
   create_start_stop_task();
+  initialize_joystick();
   // start_game();
   sj2_cli__init();
   puts("Starting RTOS");

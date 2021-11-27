@@ -1,10 +1,13 @@
 #include "game_start_stop.h"
 #include "FreeRTOS.h"
 #include "background_screen.h"
+#include "game_logic.h"
 #include "gpio.h"
 #include "jumper.h"
 #include "led_matrix_draw_alphabets.h"
+#include "led_matrix_draw_objects.h"
 #include "task.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 //#define DEBUG 1
@@ -76,7 +79,7 @@ void game_start_stop_task() {
     vTaskDelay(100);
   }
 }
-
+/*
 static void stop_start_stop_task() {
   TaskHandle_t task_handle = xTaskGetHandle(GAME_START_STOP_TASK);
   game_started = 0;
@@ -94,7 +97,7 @@ static void restart_game() {
   resume_background_tasks();
   restart_start_stop_task();
 }
-
+*/
 void start_game() {
   if (first_time) {
     // create_start_stop_task();

@@ -8,6 +8,7 @@
 #include "board_io.h"
 #include "common_macros.h"
 #include "game_start_stop.h"
+#include "jumper.h"
 #include "led_matrix_driver.h"
 #include "periodic_scheduler.h"
 #include "sj2_cli.h"
@@ -85,16 +86,24 @@ void initialize_background_screen() {
 }
 
 void shift_background_screen_down(int row) {
-
+  int shift_by;
+  int shift_till;
+  int num_shifts;
   if (row >= BACKGROUND_ROW_END) {
     return;
   }
 
-  for (int i = BACKGROUND_ROW_END; i > BACKGROUND_ROW_START; i -= BACKGROUND_ROW_JUMP) {
-    background_buffer[i] = background_buffer[i - BACKGROUND_ROW_JUMP];
+  num_shifts = (BACKGROUND_ROW_END - row) / BACKGROUND_ROW_JUMP;
+  shift_by = num_shifts * BACKGROUND_ROW_JUMP;
+  shift_till = num_shifts * BACKGROUND_ROW_START;
+
+  for (int i = BACKGROUND_ROW_END; i > shift_till; i -= BACKGROUND_ROW_JUMP) {
+    background_buffer[i] = background_buffer[i - shift_by];
     led_matrix__set_row_data(i, RED_COLOR_BIT, background_buffer[i]);
   }
-  set_random_slabs_in_row(BACKGROUND_ROW_START);
+  for (int i = 0; i < num_shifts; i++) {
+    set_random_slabs_in_row(BACKGROUND_ROW_START + i * BACKGROUND_ROW_JUMP);
+  }
 }
 
 static void print_current_background_buffer() {

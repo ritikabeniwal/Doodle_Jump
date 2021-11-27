@@ -1,5 +1,6 @@
 #include "jumper.h"
 #include "FreeRTOS.h"
+#include "background_screen.h"
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
 #include "task.h"
@@ -9,8 +10,9 @@
 data_size get_jumper_row_data(int col) {
   data_size row_data = 0;
   for (int i = col; i < (col + JUMPER_WIDTH); i++) {
-    row_data |= (1 << i);
+    row_data |= ((data_size)1 << i);
   }
+  fprintf(stderr, "Col = %d \n", col);
   return row_data;
 }
 
