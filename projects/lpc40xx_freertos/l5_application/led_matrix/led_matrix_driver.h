@@ -84,10 +84,25 @@ void led_matrix__update_display();
 void led_matrix__set_row_data(int row, led_matrix__color_e color, data_size data);
 
 /**
+ * OR the existing row data (bitmap of all 64 LEDs in a given row) and color signals corresponding to
+ * given row index
+ * @param row Row index of LED matrix corresponding to which data need to be updated
+ * @param color R/G/B singal update data
+ * @param data LED bitmap for all LEDs in a given row
+ */
+void led_matrix__or_row_data(int row, led_matrix__color_e color, data_size data);
+
+/**
  * Fill given data for all of the rows with given color signals
  * @param data LED bitmap need to be updated for all rows in LED matrix
  * @param color Color signals need to be updated for all pixels
  */
+
+/**
+ * Clear the whole row data for all the planes
+ * @param row number
+ */
+void led_matrix__clear_row_data(int row);
 void led_matrix__fill_data_buffer(data_size data, led_matrix__color_e color);
 
 void led_matrix__clear_data_buffer();

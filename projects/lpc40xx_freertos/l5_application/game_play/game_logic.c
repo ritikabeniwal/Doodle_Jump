@@ -31,10 +31,12 @@ static int delay_time_ms = LEVEL1_DELAY_TIME_STANDARD;
 
 void end_game() {
   led_matrix__clear_data_buffer();
-  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, RED);
-  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, BLUE);
-  led_matrix_draw_alphabets_print_string("LEVEL ", 35, 8, GREEN);
   fprintf(stderr, "Game over\n");
+  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, RED);
+  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, CYAN);
+  led_matrix_print_digits_string(score, 25, 40, GREEN);
+  led_matrix_draw_alphabets_print_string("LEVEL ", 35, 8, MAGENTA);
+  led_matrix_print_digits_string(level + 1, 35, 40, GREEN);
   while (1) {
     vTaskDelay(10000);
   }
@@ -121,18 +123,23 @@ void play_level_1() {
 void play_level_2() {
   led_matrix__clear_data_buffer();
   led_matrix_draw_alphabets_print_string("LEVEL", 15, 15, GREEN);
+  led_matrix_print_digits_string(level + 1, 15, 50, YELLOW);
   vTaskDelay(2000);
   led_matrix__clear_data_buffer();
   level = 0;
   delay_time_ms = LEVEL2_DELAY_TIME_STANDARD;
   return;
 }
-void update_score() { led_matrix_draw_alphabets_print_string("SCORE", 1, 2, GREEN); }
+void update_score() {
+  led_matrix_draw_alphabets_print_string("SCORE", 1, 2, GREEN);
+  led_matrix_print_digits_string(score, 1, 35, MAGENTA);
+}
 
 void game_play(void *params) {
   delay_time_ms = LEVEL1_DELAY_TIME_STANDARD;
   // Initialize Background Screen
   led_matrix_draw_alphabets_print_string("LEVEL", 15, 15, GREEN);
+  led_matrix_print_digits_string(level + 1, 15, 50, YELLOW);
   vTaskDelay(2000);
   led_matrix__clear_data_buffer();
   initialize_background_screen();
