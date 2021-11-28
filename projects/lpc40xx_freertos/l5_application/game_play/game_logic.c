@@ -1,13 +1,13 @@
 #include "game_logic.h"
 #include "FreeRTOS.h"
 #include "background_screen.h"
+#include "enemy.h"
 #include "joystick.h"
 #include "jumper.h"
 #include "led_matrix_draw_alphabets.h"
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
 #include "task.h"
-
 //#define PRINT_DEBUG
 
 #define GAME_PLAY_TASK "GAME_PLAY"
@@ -19,8 +19,12 @@
 #define LEVEL2_DELAY_TIME_STANDARD 45
 #define LEVEL2_DELAY_TIME_SPRING 40
 
+#define LEVEL1_SCORE_INCREMENT 10
+#define LEVEL2_SCORE_INCREMENT 15
+#define LEVEL1_SCORE_MAX_SCORE 150
+
 static int max_jump = 11;
-static int score = 0;
+static uint32_t score = 0;
 static int going_up = 1;
 static int level = 0;
 static int jumper_row, jumper_col;
@@ -28,8 +32,13 @@ static bool collision_detected = 0;
 static int jump_count = 0;
 static joystick_value joystick_data;
 static int delay_time_ms = LEVEL1_DELAY_TIME_STANDARD;
+static bool enemy_task_started = 0;
+static uint32_t score_increment = LEVEL1_SCORE_INCREMENT;
+bool game_over = 0;
 
 void end_game() {
+  game_over = 1;
+  vTaskDelay(100);
   led_matrix__clear_data_buffer();
   fprintf(stderr, "Game over\n");
   led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, RED);
@@ -58,9 +67,12 @@ void get_jumper_position_based_on_joystick_data(joystick_value *data, int *row, 
   }
 }
 
-void play_level_1() {
+void basic_level() {
   int prev_jumper_row = 0;
   update_background_screen(collision_detected);
+  if (check_collision_with_enemy(jumper_row, jumper_col)) {
+    end_game();
+  }
   if (going_up) {
     clear_jumper(jumper_row, jumper_col);
     joystick_data = get_joystick_data();
@@ -92,12 +104,14 @@ void play_level_1() {
       draw_jumper(jumper_row, jumper_col);
       going_up = 1;
       if (prev_jumper_row != jumper_row) {
-        score += 10;
+        score += score_increment;
       }
+      /*
       if (score == 50) {
         level = 1;
         score += 5;
       }
+      */
       if (jumper_row % 2 == 0) {
         jump_count = 0;
         max_jump = MAX_JUMP_STANDARD;
@@ -121,16 +135,27 @@ void play_level_1() {
 }
 
 void play_level_2() {
-  led_matrix__clear_data_buffer();
-  led_matrix_draw_alphabets_print_string("LEVEL", 15, 15, GREEN);
-  led_matrix_print_digits_string(level + 1, 15, 50, YELLOW);
-  vTaskDelay(2000);
-  led_matrix__clear_data_buffer();
-  level = 0;
-  delay_time_ms = LEVEL2_DELAY_TIME_STANDARD;
+  if (!enemy_task_started) {
+    led_matrix__clear_data_buffer();
+    led_matrix_draw_alphabets_print_string("LEVEL", 15, 15, GREEN);
+    led_matrix_print_digits_string(level + 1, 15, 50, YELLOW);
+    vTaskDelay(2000);
+    led_matrix__clear_data_buffer();
+    create_enemy_task();
+    enemy_task_started = 1;
+    delay_time_ms = LEVEL2_DELAY_TIME_STANDARD;
+  }
+  basic_level();
   return;
 }
+
+void play_level_1() { basic_level(); }
 void update_score() {
+  if ((level == 0) && (score >= LEVEL1_SCORE_MAX_SCORE)) {
+    score_increment = LEVEL2_SCORE_INCREMENT;
+    level++;
+  }
+
   led_matrix_draw_alphabets_print_string("SCORE", 1, 2, GREEN);
   led_matrix_print_digits_string(score, 1, 35, MAGENTA);
 }
