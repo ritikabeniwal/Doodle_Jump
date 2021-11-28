@@ -27,8 +27,8 @@ bool check_collision_with_enemy(int jumper_row, int jumper_col) {
     //    fprintf(stderr,
     //          "Jumper row %d, jumper col = %d, row diff = %d col diff = %d, eneemy row = %d enenmy col=%d, i = %d\n",
     //        jumper_row, jumper_col, row_diff, col_diff, enemies_row[i], enemies_col[i], i);
-    if (((row_diff > -JUMPER_LENGTH) && (row_diff < JUMPER_LENGTH)) &&
-        ((col_diff > -JUMPER_WIDTH) && (col_diff < JUMPER_WIDTH))) {
+    if (((row_diff > -(JUMPER_LENGTH - 1)) && (row_diff < (JUMPER_LENGTH - 1))) &&
+        ((col_diff > -(JUMPER_WIDTH - 1)) && ((col_diff < JUMPER_WIDTH - 1)))) {
       return true;
     }
   }
@@ -37,11 +37,11 @@ bool check_collision_with_enemy(int jumper_row, int jumper_col) {
 
 void find_initial_enemy_positions() {
   for (int i = 0; i < MAX_ENEMIES; i++) {
-    enemies_row[i] = rand() % 14 + (i + 1) * 8;
+    enemies_row[i] = rand() % 14 + (i / 2 + 1) * 8;
     if (i % 2 == 0) {
-      enemies_col[i] = 0;
+      enemies_col[i] = 1;
     } else {
-      enemies_col[i] = 59;
+      enemies_col[i] = 58;
     }
   }
 }
@@ -80,7 +80,7 @@ void enemy_task(void *params) {
   while (1) {
     if (!game_over) {
       draw_enemies();
-      vTaskDelay(100);
+      vTaskDelay(70);
     } else {
       vTaskSuspend(NULL);
     }
