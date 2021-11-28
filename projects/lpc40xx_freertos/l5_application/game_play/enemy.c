@@ -37,7 +37,7 @@ bool check_collision_with_enemy(int jumper_row, int jumper_col) {
 
 void find_initial_enemy_positions() {
   for (int i = 0; i < MAX_ENEMIES; i++) {
-    enemies_row[i] = rand() % 14 + (i + 1) * 16;
+    enemies_row[i] = rand() % 14 + (i + 1) * 8;
     if (i % 2 == 0) {
       enemies_col[i] = 0;
     } else {

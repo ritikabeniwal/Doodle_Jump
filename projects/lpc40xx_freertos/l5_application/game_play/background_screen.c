@@ -109,6 +109,8 @@ void shift_background_screen_down(int row) {
     return;
   }
 
+  srand(xTaskGetTickCount());
+
   num_shifts = (BACKGROUND_ROW_END - row) / BACKGROUND_ROW_JUMP;
   shift_by = num_shifts * BACKGROUND_ROW_JUMP;
   shift_till = num_shifts * BACKGROUND_ROW_START;
