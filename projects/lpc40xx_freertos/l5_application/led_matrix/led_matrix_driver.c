@@ -137,6 +137,23 @@ void led_matrix__set_row_data(int row, led_matrix__color_e color, data_size data
   }
 }
 
+void led_matrix__or_row_data(int row, led_matrix__color_e color, data_size data) {
+  if (color & BLUE_COLOR_BIT) {
+    frame_buffer[row][BLUE_PLANE] |= data;
+  }
+  if (color & GREEN_COLOR_BIT) {
+    frame_buffer[row][GREEN_PLANE] |= data;
+  }
+  if (color & RED_COLOR_BIT) {
+    frame_buffer[row][RED_PLANE] |= data;
+  }
+}
+
+void led_matrix__clear_row_data(int row) {
+  frame_buffer[row][BLUE_PLANE] = 0;
+  frame_buffer[row][GREEN_PLANE] = 0;
+  frame_buffer[row][RED_PLANE] = 0;
+}
 void led_matrix__fill_data_buffer(data_size data, led_matrix__color_e color) {
   for (int row = 0; row < 64; row++) {
     led_matrix__set_row_data(row, color, data);
