@@ -80,5 +80,5 @@ void jumper_display_on_start_screen(int row, int col) {
 }
 
 void create_jumper_tasks() {
-  xTaskCreate(jumper_task, JUMPER_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(jumper_task, JUMPER_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_MEDIUM, NULL);
 }

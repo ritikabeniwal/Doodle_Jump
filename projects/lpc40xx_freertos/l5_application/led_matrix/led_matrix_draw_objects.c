@@ -18,8 +18,8 @@ void draw_jumper(int row, int col) {
   for (int i = 0; i < JUMPER_LENGTH; i++) {
     for (int j = JUMPER_WIDTH - 1; j >= 0; j--) {
       if (jumper[i] & (1 << j)) {
-        led_matrix__set_pixel(row - i, j + col, jumper_color[i][j]);
-        // led_matrix__set_pixel(row + i, j + col, jumper_color[i][j]);
+        // led_matrix__set_pixel(row - i, j + col, jumper_color[i][j]);
+        led_matrix__set_pixel(row + i, j + col, jumper_color[i][j]);
       }
     }
   }
@@ -29,8 +29,8 @@ void clear_jumper(int row, int col) {
   for (int i = 0; i < JUMPER_LENGTH; i++) {
     for (int j = JUMPER_WIDTH - 1; j >= 0; j--) {
       if (jumper[i] & (1 << j)) {
-        led_matrix__clear_pixel(row - i, j + col);
-        // led_matrix__clear_pixel(row + i, j + col);
+        // led_matrix__clear_pixel(row - i, j + col);
+        led_matrix__clear_pixel(row + i, j + col);
       }
     }
   }

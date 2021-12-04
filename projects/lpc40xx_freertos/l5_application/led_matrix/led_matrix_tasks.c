@@ -20,5 +20,5 @@ static void display_task() {
 
 void create_led_matrix_tasks(void) {
   led_matrix_init();
-  xTaskCreate(display_task, "display_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(display_task, "display_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
 }

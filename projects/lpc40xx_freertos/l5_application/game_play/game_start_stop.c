@@ -6,6 +6,7 @@
 #include "jumper.h"
 #include "led_matrix_draw_alphabets.h"
 #include "led_matrix_draw_objects.h"
+#include "mp3.h"
 #include "task.h"
 
 #include <stdbool.h>
@@ -100,6 +101,7 @@ static void restart_game() {
 */
 void start_game() {
   if (first_time) {
+    mp3__send_command(0x03, 0x00, 0x05);
     // create_start_stop_task();
     // create_background_screen_tasks();
     // create_jumper_tasks();
@@ -122,5 +124,5 @@ void create_start_stop_task() {
   xTaskCreate(check_play_button_status_task, BUTTON_STATUS_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_MEDIUM,
               NULL);
   //  xTaskCreate(, START_SCREEN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-  xTaskCreate(game_start_stop_task, GAME_START_STOP_TASK, (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(game_start_stop_task, GAME_START_STOP_TASK, (512U * 8) / sizeof(void *), NULL, PRIORITY_MEDIUM, NULL);
 }

@@ -88,5 +88,5 @@ void enemy_task(void *params) {
 }
 
 void create_enemy_task() {
-  xTaskCreate(enemy_task, ENEMY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(enemy_task, ENEMY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
 }

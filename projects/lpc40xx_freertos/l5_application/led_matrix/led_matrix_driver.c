@@ -1,5 +1,6 @@
 #include "led_matrix_driver.h"
 #include "delay.h"
+#include"mp3.h"
 #include "gpio.h"
 #include "lpc40xx.h"
 #include "lpc_peripherals.h"
@@ -188,6 +189,7 @@ void led_matrix__update_display() {
     }
     led_matrix__enable_latch(); // push shift register contents down to output registers
     led_matrix__enable_display();
+    mp3__send_command(0x03, 0x00, 0x05);
     delay__us(50);
   }
   led_matrix__disable_display();

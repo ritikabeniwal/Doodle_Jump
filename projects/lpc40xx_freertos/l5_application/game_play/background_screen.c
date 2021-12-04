@@ -171,5 +171,5 @@ void resume_background_tasks() {
 }
 
 void create_background_screen_tasks(void) {
-  xTaskCreate(background_screen_task, BACKGROUND_SCREEN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(background_screen_task, BACKGROUND_SCREEN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
 }

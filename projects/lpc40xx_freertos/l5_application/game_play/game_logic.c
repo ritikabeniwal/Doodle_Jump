@@ -7,6 +7,7 @@
 #include "led_matrix_draw_alphabets.h"
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
+#include "mp3.h"
 #include "task.h"
 //#define PRINT_DEBUG
 
@@ -72,6 +73,7 @@ void basic_level() {
   update_background_screen(collision_detected);
   if (check_collision_with_enemy(jumper_row, jumper_col)) {
     end_game();
+    mp3_play(0x03, 0x00, 0x04); // game_end sound
   }
   if (going_up) {
     clear_jumper(jumper_row, jumper_col);
@@ -97,6 +99,7 @@ void basic_level() {
     jumper_row += 1;
     draw_jumper(jumper_row, jumper_col);
     if (detect_collision_background_screen(jumper_row, jumper_col)) {
+      mp3_play(0x03, 0x00, 0x01); // jump_sound
       shift_background_screen_down(jumper_row);
       clear_jumper(jumper_row, jumper_col);
       prev_jumper_row = jumper_row;
@@ -188,5 +191,5 @@ void game_play(void *params) {
 }
 
 void create_game_play_task() {
-  xTaskCreate(game_play, GAME_PLAY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(game_play, GAME_PLAY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_MEDIUM, NULL);
 }

@@ -9,13 +9,16 @@
 #include "joystick.h"
 #include "led_matrix_driver.h"
 #include "led_matrix_tasks.h"
+#include "mp3.h"
 #include "periodic_scheduler.h"
 #include "sj2_cli.h"
+
 int main(void) {
   create_led_matrix_tasks();
   create_start_stop_task();
   initialize_joystick();
-  //  srand(xTaskGetTickCount());
+  create_mp3_task();
+  // srand(xTaskGetTickCount());
   // start_game();
   sj2_cli__init();
   puts("Starting RTOS");
