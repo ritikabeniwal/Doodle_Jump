@@ -30,6 +30,7 @@ static int level = 0;
 static int jumper_row, jumper_col;
 static bool collision_detected = 0;
 static int jump_count = 0;
+static int gun_row, gun_col;
 static joystick_value joystick_data;
 static int delay_time_ms = LEVEL1_DELAY_TIME_STANDARD;
 static bool enemy_task_started = 0;
@@ -66,6 +67,25 @@ void get_jumper_position_based_on_joystick_data(joystick_value *data, int *row, 
     *col = 0;
   }
 }
+void shoot_gun(joystick_value *data, int row, int col) {
+  int gun_row = row + JUMPER_LENGTH;
+  int gun_col = col + JUMPER_WIDTH / 2;
+  if (data->s_y > 3500) {
+    while (1) {
+      clear_gun(gun_row, gun_col);
+      draw_gun(gun_row, gun_col);
+      if (kill_enemy_with_gun(gun_row, gun_col)) {
+        clear_gun(gun_row, gun_col);
+        break;
+      }
+      if (gun_row > 56 || gun_col > 0 || gun_col < 59) {
+        clear_gun(gun_row, gun_col);
+        break;
+      }
+      vTaskDelay(100);
+    }
+  }
+}
 
 void basic_level() {
   int prev_jumper_row = 0;
@@ -77,6 +97,7 @@ void basic_level() {
     clear_jumper(jumper_row, jumper_col);
     joystick_data = get_joystick_data();
     get_jumper_position_based_on_joystick_data(&joystick_data, &jumper_row, &jumper_col);
+    shoot_gun(&joystick_data, jumper_row, jumper_col);
     jumper_row -= 1;
     draw_jumper(jumper_row, jumper_col);
     jump_count++;
@@ -94,6 +115,7 @@ void basic_level() {
     clear_jumper(jumper_row, jumper_col);
     joystick_data = get_joystick_data();
     get_jumper_position_based_on_joystick_data(&joystick_data, &jumper_row, &jumper_col);
+    shoot_gun(&joystick_data, jumper_row, jumper_col);
     jumper_row += 1;
     draw_jumper(jumper_row, jumper_col);
     if (detect_collision_background_screen(jumper_row, jumper_col)) {
@@ -173,16 +195,17 @@ void game_play(void *params) {
   while (1) {
     update_score();
     vTaskDelay(delay_time_ms);
-    switch (level) {
-    case 0:
-      play_level_1();
-      continue;
-    case 1:
-      play_level_2();
-      continue;
-    default:
-      break;
-    }
+    // switch (level) {
+    // case 0:
+    //   play_level_1();
+    //   continue;
+    // case 1:
+    //   play_level_2();
+    //   continue;
+    // default:
+    //   break;
+    // }
+    play_level_2();
   }
   return;
 }

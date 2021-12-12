@@ -6,11 +6,12 @@
 #include "jumper.h"
 #include "led_matrix_draw_alphabets.h"
 #include "led_matrix_draw_objects.h"
+#include "mp3.h"
 #include "task.h"
 
 #include <stdbool.h>
 #include <stdio.h>
-//#define DEBUG 1
+//#define DEBUG
 #define GAME_START_STOP_TASK "game_task"
 #define START_SCREEN_TASK "start_task"
 #define BUTTON_STATUS_TASK "button_status"
@@ -49,6 +50,7 @@ void game_start_stop_task() {
   while (1) {
     if (!game_started) {
       led_matrtix_draw_objects_print_start_screen();
+      mp3__send_command(0x03, 0x00, 0x01);
       while (1) {
         if (!start_game_button) {
           jumper_display_on_start_screen(56, 30);
@@ -99,6 +101,7 @@ static void restart_game() {
 }
 */
 void start_game() {
+  mp3__send_command(0x03, 0x00, 0x01);
   if (first_time) {
     // create_start_stop_task();
     // create_background_screen_tasks();
@@ -114,6 +117,7 @@ void stop_game() {
   // Suspend all game tasks
   // stop_start_stop_task();
   // stop_background_tasks();
+  mp3__send_command(0x03, 0x00, 0x07);
   uint32_t *bad_pointer = (uint32_t *)0x00000001;
   *bad_pointer = 0xDEADBEEF;
 }

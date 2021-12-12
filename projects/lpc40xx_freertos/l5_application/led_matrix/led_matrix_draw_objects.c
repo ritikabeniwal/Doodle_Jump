@@ -8,10 +8,15 @@ uint8_t jumper_color[JUMPER_LENGTH][JUMPER_WIDTH] = {
     {GREEN, GREEN, GREEN, GREEN, GREEN}, {OFF, BLUE, BLUE, BLUE, OFF},
 };
 
-uint8_t enemy[ENEMY_LENGTH] = {0xE, 0x1F, 0x1F, 0x1F, 0xE};
+uint8_t enemy[ENEMY_LENGTH] = {0x11, 0x0E, 0x0E, 0x04, 0x0A};
 uint8_t enemy_color[ENEMY_LENGTH][ENEMY_WIDTH] = {
-    {OFF, RED, RED, RED, OFF},       {BLUE, BLUE, GREEN, GREEN, GREEN}, {OFF, YELLOW, YELLOW, YELLOW, OFF},
-    {OFF, GREEN, GREEN, GREEN, RED}, {OFF, RED, RED, RED, OFF},
+    {GREEN, OFF, OFF, OFF, GREEN}, {OFF, GREEN, GREEN, GREEN, OFF}, {OFF, GREEN, GREEN, GREEN, OFF},
+    {OFF, OFF, GREEN, OFF, OFF},   {OFF, GREEN, OFF, GREEN, OFF},
+};
+
+uint8_t gun[GUN_LENGTH] = {0x01, 0x01, 0x01, 0x01, 0x01};
+uint8_t gun_color[GUN_LENGTH][GUN_WIDTH] = {
+    {BLUE}, {BLUE}, {BLUE}, {BLUE}, {BLUE},
 };
 
 void draw_jumper(int row, int col) {
@@ -19,7 +24,7 @@ void draw_jumper(int row, int col) {
     for (int j = JUMPER_WIDTH - 1; j >= 0; j--) {
       if (jumper[i] & (1 << j)) {
         led_matrix__set_pixel(row - i, j + col, jumper_color[i][j]);
-        // led_matrix__set_pixel(row + i, j + col, jumper_color[i][j]);
+        //  led_matrix__set_pixel(row + i, j + col, jumper_color[i][j]);
       }
     }
   }
@@ -51,6 +56,28 @@ void clear_enemy(int row, int col) {
   for (int i = 0; i < ENEMY_LENGTH; i++) {
     for (int j = ENEMY_WIDTH - 1; j >= 0; j--) {
       if (enemy[i] & (1 << j)) {
+        led_matrix__clear_pixel(row - i, j + col);
+        // led_matrix__clear_pixel(row + i, j + col);
+      }
+    }
+  }
+}
+
+void draw_gun(int row, int col) {
+  for (int i = 0; i < GUN_LENGTH; i++) {
+    for (int j = GUN_WIDTH - 1; j >= 0; j--) {
+      if (gun[i] & (1 << j)) {
+        led_matrix__set_pixel(row - i, j + col, gun_color[i][j]);
+        // led_matrix__set_pixel(row + i, j + col, jumper_color[i][j]);
+      }
+    }
+  }
+}
+
+void clear_gun(int row, int col) {
+  for (int i = 0; i < GUN_LENGTH; i++) {
+    for (int j = GUN_WIDTH - 1; j >= 0; j--) {
+      if (gun[i] & (1 << j)) {
         led_matrix__clear_pixel(row - i, j + col);
         // led_matrix__clear_pixel(row + i, j + col);
       }

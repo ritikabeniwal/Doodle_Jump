@@ -35,9 +35,30 @@ bool check_collision_with_enemy(int jumper_row, int jumper_col) {
   return false;
 }
 
+bool kill_enemy_with_gun(int gun_row, int gun_col) {
+  // Check collision with each enemy
+  int row_diff, col_diff;
+  for (int i = 0; i < MAX_ENEMIES; i++) {
+    row_diff = gun_row - enemies_row[i];
+    col_diff = gun_col - enemies_col[i];
+    //    fprintf(stderr,
+    //          "Jumper row %d, jumper col = %d, row diff = %d col diff = %d, eneemy row = %d enenmy col=%d, i = %d\n",
+    //        jumper_row, jumper_col, row_diff, col_diff, enemies_row[i], enemies_col[i], i);
+    if (((row_diff > -(GUN_LENGTH)) && (row_diff < (GUN_LENGTH))) &&
+        ((col_diff > -(GUN_WIDTH)) && ((col_diff < GUN_WIDTH)))) {
+      clear_enemy(enemies_row[i], enemies_col[i]);
+      enemies_row[i] = -1;
+      enemies_col[i] = -1;
+
+      return true;
+    }
+  }
+  return false;
+}
+
 void find_initial_enemy_positions() {
   for (int i = 0; i < MAX_ENEMIES; i++) {
-    enemies_row[i] = rand() % 14 + (i / 2 + 1) * 8;
+    enemies_row[i] = rand() % 16 + (i / 2 + 1) * 8;
     if (i % 2 == 0) {
       enemies_col[i] = 1;
     } else {
@@ -47,7 +68,7 @@ void find_initial_enemy_positions() {
 }
 
 void find_new_enemy_position(int enemy_num) {
-  enemies_row[enemy_num] = rand() % 16 + (enemy_num / 2 + 1) * 16;
+  enemies_row[enemy_num] = rand() % 20 + (enemy_num / 2 + 1) * 16;
   if (enemy_num % 2 == 0) {
     enemies_col[enemy_num] = 1;
   } else {

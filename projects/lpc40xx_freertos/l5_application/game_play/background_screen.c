@@ -85,7 +85,7 @@ static void set_random_slabs_in_row(int row) {
     led_matrix__set_row_data(row, RED, background_buffer[row]);
     if (special_slab_count % 10 == 5) {
       background_buffer[row - 1] = (special_slab_bits) << (64 - SLAB_LENGTH - current_slab_index);
-      led_matrix__set_row_data(row - 1, YELLOW, background_buffer[row - 1]);
+      led_matrix__set_row_data(row - 1, WHITE, background_buffer[row - 1]);
     }
     special_slab_count++;
     previous_slab_end_index = current_slab_index + SLAB_LENGTH + MIN_SLAB_GAP;
@@ -123,12 +123,12 @@ void shift_background_screen_down(int row) {
 
   for (int i = BACKGROUND_ROW_END - 1; i > shift_till - 1; i -= BACKGROUND_ROW_JUMP) {
     background_buffer[i] = background_buffer[i - shift_by];
-    led_matrix__set_row_data(i, YELLOW, background_buffer[i]);
+    led_matrix__set_row_data(i, WHITE, background_buffer[i]);
   }
   for (int i = 0; i < num_shifts; i++) {
     fprintf(stderr, "Creating %d row\n", i);
     background_buffer[BACKGROUND_ROW_START + (i * BACKGROUND_ROW_JUMP) - 1] = 0;
-    led_matrix__set_row_data(BACKGROUND_ROW_START + (i * BACKGROUND_ROW_JUMP) - 1, YELLOW,
+    led_matrix__set_row_data(BACKGROUND_ROW_START + (i * BACKGROUND_ROW_JUMP) - 1, WHITE,
                              background_buffer[BACKGROUND_ROW_START + i - 1]);
     set_random_slabs_in_row(BACKGROUND_ROW_START + i * BACKGROUND_ROW_JUMP);
   }
@@ -137,7 +137,7 @@ void shift_background_screen_down(int row) {
 static void print_current_background_buffer() {
   for (int i = BACKGROUND_ROW_END; i >= BACKGROUND_ROW_START; i -= BACKGROUND_ROW_JUMP) {
     led_matrix__set_row_data(i, RED, background_buffer[i]);
-    led_matrix__set_row_data(i - 1, YELLOW, background_buffer[i - 1]);
+    led_matrix__set_row_data(i - 1, WHITE, background_buffer[i - 1]);
   }
 }
 
