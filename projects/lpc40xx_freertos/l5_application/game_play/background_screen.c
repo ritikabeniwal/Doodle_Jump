@@ -82,7 +82,7 @@ static void set_random_slabs_in_row(int row) {
     }
     // Udate the LED Matrix
     background_buffer[row] |= slab_bits << (64 - SLAB_LENGTH - current_slab_index);
-    led_matrix__set_row_data(row, RED, background_buffer[row]);
+    led_matrix__set_row_data(row, CYAN, background_buffer[row]);
     if (special_slab_count % 10 == 5) {
       background_buffer[row - 1] = (special_slab_bits) << (64 - SLAB_LENGTH - current_slab_index);
       led_matrix__set_row_data(row - 1, YELLOW, background_buffer[row - 1]);
@@ -118,7 +118,7 @@ void shift_background_screen_down(int row) {
   fprintf(stderr, "row = %d, shift_by = %d, shift_till = %d, num shifts = %d\n", row, shift_by, shift_till, num_shifts);
   for (int i = BACKGROUND_ROW_END; i > shift_till; i -= BACKGROUND_ROW_JUMP) {
     background_buffer[i] = background_buffer[i - shift_by];
-    led_matrix__set_row_data(i, RED, background_buffer[i]);
+    led_matrix__set_row_data(i, CYAN, background_buffer[i]);
   }
 
   for (int i = BACKGROUND_ROW_END - 1; i > shift_till - 1; i -= BACKGROUND_ROW_JUMP) {
@@ -136,7 +136,7 @@ void shift_background_screen_down(int row) {
 
 static void print_current_background_buffer() {
   for (int i = BACKGROUND_ROW_END; i >= BACKGROUND_ROW_START; i -= BACKGROUND_ROW_JUMP) {
-    led_matrix__set_row_data(i, RED, background_buffer[i]);
+    led_matrix__set_row_data(i, CYAN, background_buffer[i]);
     led_matrix__set_row_data(i - 1, YELLOW, background_buffer[i - 1]);
   }
 }

@@ -7,6 +7,7 @@
 #include "led_matrix_draw_alphabets.h"
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
+#include "mp3.h"
 #include "task.h"
 //#define PRINT_DEBUG
 
@@ -23,6 +24,8 @@
 #define LEVEL2_SCORE_INCREMENT 15
 #define LEVEL1_SCORE_MAX_SCORE 150
 
+static int level2_song_played = 0;
+static int level1_song_played = 0;
 static int max_jump = 11;
 static uint32_t score = 0;
 static int going_up = 1;
@@ -41,11 +44,12 @@ void end_game() {
   vTaskDelay(100);
   led_matrix__clear_data_buffer();
   fprintf(stderr, "Game over\n");
-  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, RED);
-  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, CYAN);
-  led_matrix_print_digits_string(score, 25, 40, GREEN);
+  // mp3_play_game_over_song();
+  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, MAGENTA);
+  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, MAGENTA);
+  led_matrix_print_digits_string(score, 25, 40, MAGENTA);
   led_matrix_draw_alphabets_print_string("LEVEL ", 35, 8, MAGENTA);
-  led_matrix_print_digits_string(level + 1, 35, 40, GREEN);
+  led_matrix_print_digits_string(level + 1, 35, 40, MAGENTA);
   while (1) {
     vTaskDelay(10000);
   }
@@ -53,9 +57,10 @@ void end_game() {
 
 void get_jumper_position_based_on_joystick_data(joystick_value *data, int *row, int *col) {
 
-  if (data->s_x < 2000) {
+  fprintf(stderr, "x value = %d \n", data->s_x);
+  if (data->s_x < 500) {
     *col += 1;
-  } else if (data->s_x > 2200) {
+  } else if (data->s_x > 3500) {
     *col -= 1;
   } else {
     return;
@@ -71,6 +76,10 @@ void basic_level() {
   int prev_jumper_row = 0;
   update_background_screen(collision_detected);
   if (check_collision_with_enemy(jumper_row, jumper_col)) {
+    mp3_play_collision_with_enemy_sound();
+    vTaskDelay(1000);
+    level2_song_played = 0;
+    level1_song_played = 0;
     end_game();
   }
   if (going_up) {
@@ -105,6 +114,9 @@ void basic_level() {
       going_up = 1;
       if (prev_jumper_row != jumper_row) {
         score += score_increment;
+        mp3_play_jump_up_sound();
+        level2_song_played = 0;
+        level1_song_played = 0;
       }
       /*
       if (score == 50) {
@@ -120,6 +132,9 @@ void basic_level() {
         jump_count = 1;
         max_jump = MAX_JUMP_SPRING;
         delay_time_ms = LEVEL1_DELAY_TIME_SPRING;
+        mp3_play_spring_sound();
+        level2_song_played = 0;
+        level1_song_played = 0;
       }
       vTaskDelay(delay_time_ms);
       return;
@@ -135,6 +150,10 @@ void basic_level() {
 }
 
 void play_level_2() {
+  if (!level2_song_played) {
+    mp3_play_level2_song();
+    level2_song_played = 1;
+  }
   if (!enemy_task_started) {
     led_matrix__clear_data_buffer();
     led_matrix_draw_alphabets_print_string("LEVEL", 15, 15, GREEN);
@@ -149,7 +168,13 @@ void play_level_2() {
   return;
 }
 
-void play_level_1() { basic_level(); }
+void play_level_1() {
+  if (!level1_song_played) {
+    mp3_play_level1_song();
+    level1_song_played = 1;
+  }
+  basic_level();
+}
 void update_score() {
   if ((level == 0) && (score >= LEVEL1_SCORE_MAX_SCORE)) {
     score_increment = LEVEL2_SCORE_INCREMENT;

@@ -14,7 +14,7 @@
 static void display_task() {
   while (1) {
     led_matrix__update_display();
-    vTaskDelay(10);
+    vTaskDelay(1);
   }
 }
 
