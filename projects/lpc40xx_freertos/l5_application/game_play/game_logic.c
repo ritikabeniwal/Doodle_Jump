@@ -12,6 +12,7 @@
 //#define PRINT_DEBUG
 
 #define GAME_PLAY_TASK "GAME_PLAY"
+#define GUN_TASK "gun_task"
 #define MAX_JUMP_STANDARD 11
 #define MAX_JUMP_SPRING 20
 
@@ -57,7 +58,6 @@ void end_game() {
 
 void get_jumper_position_based_on_joystick_data(joystick_value *data, int *row, int *col) {
 
-  fprintf(stderr, "x value = %d \n", data->s_x);
   if (data->s_x < 500) {
     *col += 1;
   } else if (data->s_x > 3500) {
@@ -215,3 +215,34 @@ void game_play(void *params) {
 void create_game_play_task() {
   xTaskCreate(game_play, GAME_PLAY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
 }
+
+void shoot_gun(int row, int col) {
+  int gun_row = row;
+  int gun_col = col + JUMPER_WIDTH / 2;
+  joystick_value data;
+  data = get_joystick_data();
+  //  fprintf(stderr, "y value = %d \n", data.s_y);
+  if (data.s_y > 3900) {
+    while (1) {
+      draw_gun(gun_row, gun_col);
+      vTaskDelay(200);
+      if (check_gun_collision_with_enemy(gun_row, gun_col)) {
+        clear_gun(gun_row, gun_col);
+        break;
+      }
+      clear_gun(gun_row, gun_col);
+      gun_row -= GUN_LENGTH;
+      if (gun_row < 16) {
+        break;
+      }
+    }
+  }
+}
+
+void gun_task(void *params) {
+  while (1) {
+    shoot_gun(jumper_row, jumper_col);
+    vTaskDelay(100);
+  }
+}
+void create_gun_task() { xTaskCreate(gun_task, GUN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL); }

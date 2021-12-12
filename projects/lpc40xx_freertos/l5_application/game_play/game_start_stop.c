@@ -104,6 +104,7 @@ void start_game() {
     // create_background_screen_tasks();
     // create_jumper_tasks();
     create_game_play_task();
+    create_gun_task();
     first_time = 0;
   } else {
     // restart_game();
