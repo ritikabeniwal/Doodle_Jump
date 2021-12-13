@@ -8,23 +8,26 @@
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
 #include "mp3.h"
+#include "semphr.h"
 #include "task.h"
 //#define PRINT_DEBUG
 
 #define GAME_PLAY_TASK "GAME_PLAY"
 #define GUN_TASK "gun_task"
 #define MAX_JUMP_STANDARD 11
-#define MAX_JUMP_SPRING 20
+#define MAX_JUMP_SPRING 25
 
-#define LEVEL1_DELAY_TIME_STANDARD 65
-#define LEVEL1_DELAY_TIME_SPRING 50
-#define LEVEL2_DELAY_TIME_STANDARD 45
-#define LEVEL2_DELAY_TIME_SPRING 40
+#define LEVEL1_DELAY_TIME_STANDARD 40
+#define LEVEL1_DELAY_TIME_SPRING 40
+#define LEVEL2_DELAY_TIME_STANDARD 25
+#define LEVEL2_DELAY_TIME_SPRING 20
 
 #define LEVEL1_SCORE_INCREMENT 10
 #define LEVEL2_SCORE_INCREMENT 15
 #define LEVEL1_SCORE_MAX_SCORE 150
+#define ENEMY_KILL_INCREMENT 25
 
+static SemaphoreHandle_t score_mutex;
 static int level2_song_played = 0;
 static int level1_song_played = 0;
 static int max_jump = 11;
@@ -38,19 +41,37 @@ static joystick_value joystick_data;
 static int delay_time_ms = LEVEL1_DELAY_TIME_STANDARD;
 static bool enemy_task_started = 0;
 static uint32_t score_increment = LEVEL1_SCORE_INCREMENT;
+static bool end_game_sound_played = 0;
 bool game_over = 0;
+
+void jumper_fall(int row, int col) {
+  clear_jumper(row, col);
+  while (1) {
+    draw_inverted_jumper(row, col);
+    vTaskDelay(100);
+    clear_inverted_jumper(row, col);
+    row += 1;
+    if (row > 56) {
+      break;
+    }
+  }
+}
 
 void end_game() {
   game_over = 1;
+
+  if (!end_game_sound_played) {
+    mp3_play_collision_with_enemy_sound();
+  }
   vTaskDelay(100);
   led_matrix__clear_data_buffer();
-  fprintf(stderr, "Game over\n");
+  // fprintf(stderr, "Game over\n");
   // mp3_play_game_over_song();
-  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, MAGENTA);
-  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, MAGENTA);
+  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, BLUE);
+  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, GREEN);
   led_matrix_print_digits_string(score, 25, 40, MAGENTA);
   led_matrix_draw_alphabets_print_string("LEVEL ", 35, 8, MAGENTA);
-  led_matrix_print_digits_string(level + 1, 35, 40, MAGENTA);
+  led_matrix_print_digits_string(level + 1, 35, 40, GREEN);
   while (1) {
     vTaskDelay(10000);
   }
@@ -76,8 +97,10 @@ void basic_level() {
   int prev_jumper_row = 0;
   update_background_screen(collision_detected);
   if (check_collision_with_enemy(jumper_row, jumper_col)) {
+    game_over = 1;
+    end_game_sound_played = 1;
     mp3_play_collision_with_enemy_sound();
-    vTaskDelay(1000);
+    jumper_fall(jumper_row, jumper_col);
     level2_song_played = 0;
     level1_song_played = 0;
     end_game();
@@ -176,10 +199,12 @@ void play_level_1() {
   basic_level();
 }
 void update_score() {
+  xSemaphoreTake(score_mutex, portMAX_DELAY);
   if ((level == 0) && (score >= LEVEL1_SCORE_MAX_SCORE)) {
     score_increment = LEVEL2_SCORE_INCREMENT;
     level++;
   }
+  xSemaphoreGive(score_mutex);
 
   led_matrix_draw_alphabets_print_string("SCORE", 1, 2, GREEN);
   led_matrix_print_digits_string(score, 1, 35, MAGENTA);
@@ -212,27 +237,26 @@ void game_play(void *params) {
   return;
 }
 
-void create_game_play_task() {
-  xTaskCreate(game_play, GAME_PLAY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-}
-
 void shoot_gun(int row, int col) {
   int gun_row = row;
   int gun_col = col + JUMPER_WIDTH / 2;
   joystick_value data;
   data = get_joystick_data();
   //  fprintf(stderr, "y value = %d \n", data.s_y);
-  if (data.s_y > 3900) {
+  if (data.s_y > 4000) {
     while (1) {
       draw_gun(gun_row, gun_col);
       vTaskDelay(200);
       if (check_gun_collision_with_enemy(gun_row, gun_col)) {
+        xSemaphoreTake(score_mutex, portMAX_DELAY);
+        score += ENEMY_KILL_INCREMENT;
+        xSemaphoreGive(score_mutex);
         clear_gun(gun_row, gun_col);
         break;
       }
       clear_gun(gun_row, gun_col);
       gun_row -= GUN_LENGTH;
-      if (gun_row < 16) {
+      if (gun_row < 11) {
         break;
       }
     }
@@ -241,8 +265,17 @@ void shoot_gun(int row, int col) {
 
 void gun_task(void *params) {
   while (1) {
-    shoot_gun(jumper_row, jumper_col);
-    vTaskDelay(100);
+    if (!game_over) {
+      shoot_gun(jumper_row, jumper_col);
+      vTaskDelay(20);
+    } else {
+      vTaskSuspend(NULL);
+    }
   }
 }
-void create_gun_task() { xTaskCreate(gun_task, GUN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL); }
+
+void create_game_play_tasks() {
+  score_mutex = xSemaphoreCreateMutex();
+  xTaskCreate(game_play, GAME_PLAY_TASK, (1024U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(gun_task, GUN_TASK, (256U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+}

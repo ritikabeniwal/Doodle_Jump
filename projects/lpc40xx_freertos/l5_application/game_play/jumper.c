@@ -27,7 +27,7 @@ bool find_initial_jumper_position(int *row, int *col) {
       break;
     }
   }
-  fprintf(stderr, "Col = %d", *col);
+  // fprintf(stderr, "Col = %d", *col);
   *row = last_backround_row;
   *col = *col + 2;
   // If found a valid position return true

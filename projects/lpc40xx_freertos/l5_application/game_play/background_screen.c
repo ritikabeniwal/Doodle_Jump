@@ -18,7 +18,7 @@
 #define MIN_SLAB_GAP 6
 #define MAX_SLAB_GAP 8
 #define LAST_SLAB_INDEX 56
-#define MAX_SLABS_PER_ROW 4
+#define MAX_SLABS_PER_ROW 3
 #define BACKGROUND_ROW_START 8
 #define BACKGROUND_ROW_END 56
 #define BACKGROUND_ROW_JUMP 8
@@ -83,7 +83,7 @@ static void set_random_slabs_in_row(int row) {
     // Udate the LED Matrix
     background_buffer[row] |= slab_bits << (64 - SLAB_LENGTH - current_slab_index);
     led_matrix__set_row_data(row, CYAN, background_buffer[row]);
-    if (special_slab_count % 10 == 5) {
+    if (special_slab_count % 3 == 0) {
       background_buffer[row - 1] = (special_slab_bits) << (64 - SLAB_LENGTH - current_slab_index);
       led_matrix__set_row_data(row - 1, YELLOW, background_buffer[row - 1]);
     }

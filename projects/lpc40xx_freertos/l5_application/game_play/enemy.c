@@ -29,6 +29,9 @@ bool check_collision_with_enemy(int jumper_row, int jumper_col) {
     //        jumper_row, jumper_col, row_diff, col_diff, enemies_row[i], enemies_col[i], i);
     if (((row_diff > -(JUMPER_LENGTH - 1)) && (row_diff < (JUMPER_LENGTH - 1))) &&
         ((col_diff > -(JUMPER_WIDTH - 1)) && ((col_diff < JUMPER_WIDTH - 1)))) {
+      clear_enemy(enemies_row[i], enemies_col[i]);
+      enemies_row[i] = -1;
+      enemies_col[i] = -1;
       return true;
     }
   }
@@ -50,8 +53,7 @@ bool check_gun_collision_with_enemy(int gun_row, int gun_col) {
       clear_enemy(enemies_row[i], enemies_col[i]);
       enemies_row[i] = -1;
       enemies_col[i] = -1;
-      fprintf(stderr, "killed %d\n", i);
-      vTaskDelay(400);
+      vTaskDelay(200);
       return true;
     }
   }
@@ -59,7 +61,13 @@ bool check_gun_collision_with_enemy(int gun_row, int gun_col) {
 }
 void find_initial_enemy_positions() {
   for (int i = 0; i < MAX_ENEMIES; i++) {
-    enemies_row[i] = rand() % 14 + (i / 2 + 1) * 10;
+    // enemies_row[i] = rand() % 14 + (i / 2 + 1) * 10;
+    enemies_row[i] = (rand() % 32) / 8;
+    if (enemies_row[i] == 0) {
+      enemies_row[i] = 10;
+    } else {
+      enemies_row[i] = enemies_row[i] * 8 + 14;
+    }
     if (i % 2 == 0) {
       // enemies_col[i] = rand() % 40;
       enemies_col[i] = 1;
@@ -71,7 +79,16 @@ void find_initial_enemy_positions() {
 }
 
 void find_new_enemy_position(int enemy_num) {
-  enemies_row[enemy_num] = rand() % 16 + (enemy_num / 2 + 1) * 14;
+  // enemies_row[enemy_num] = rand() % 16 + (enemy_num / 2 + 1) * 14;
+  enemies_row[enemy_num] = (rand() % 32) / 8;
+  if (enemies_row[enemy_num] == 0) {
+    enemies_row[enemy_num] = 22;
+  } else {
+    enemies_row[enemy_num] = enemies_row[enemy_num] * 8 + 22;
+  }
+  if (enemies_row[enemy_num] > 40) {
+    enemies_row[enemy_num] = 46 - (enemy_num * 8);
+  }
   if (enemy_num % 2 == 0) {
     // enemies_col[enemy_num] = rand() % 40;
     enemies_col[enemy_num] = 1;
@@ -87,10 +104,10 @@ void draw_enemies() {
       clear_enemy(enemies_row[i], enemies_col[i]);
     }
 
-    fprintf(stderr, "Value %d enemy at %d %d\n", i, enemies_row[i], enemies_col[i]);
+    // fprintf(stderr, "Value %d enemy at %d %d\n", i, enemies_row[i], enemies_col[i]);
     if (enemies_col[i] == 59 || enemies_col[i] == 0 || enemies_col[i] == -1 || enemies_row[i] == -1) {
       find_new_enemy_position(i);
-      fprintf(stderr, "Drawing new enemy at %d %d\n", enemies_row[i], enemies_col[i]);
+      // fprintf(stderr, "Drawing new enemy at %d %d\n", enemies_row[i], enemies_col[i]);
     } else {
       if (i % 2 == 0) {
         enemies_col[i] += 1;
