@@ -14,11 +14,11 @@
 static void display_task() {
   while (1) {
     led_matrix__update_display();
-    vTaskDelay(10);
+    vTaskDelay(1);
   }
 }
 
 void create_led_matrix_tasks(void) {
   led_matrix_init();
-  xTaskCreate(display_task, "display_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_LOW, NULL);
+  xTaskCreate(display_task, "display_task", (512U * 8) / sizeof(void *), NULL, PRIORITY_MEDIUM, NULL);
 }
