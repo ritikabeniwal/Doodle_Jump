@@ -16,8 +16,6 @@ int main(void) {
   create_led_matrix_tasks();
   create_start_stop_task();
   initialize_joystick();
-  //  srand(xTaskGetTickCount());
-  // start_game();
   mp3__init();
   sj2_cli__init();
   puts("Starting RTOS");

@@ -54,56 +54,42 @@ void mp3__init() {
   mp3_play_start_song();
 }
 
-void mp3_play(int num) {
-  // mp3__send_command(CYCLE_PLAY_FOLDER, 0x01, 0x02);
-  // vTaskDelay(10000);
-  // mp3__send_command(PAUSE, 0x00, 0x00);
-  // vTaskDelay(30000);
-  // mp3__send_command(INDEX_SONG, 0x00, 0x06);
-  // vTaskDelay(30000);
-  // mp3__send_command(INDEX_SONG, 0x00, 0x01);
-  // vTaskDelay(30000);
-  // mp3__send_command(RESUME_PLAYBACK, 0x00, 0x00);
+void mp3_play(int num) { mp3__send_command(CYCLE_PLAY_FOLDER, num, 0x02); }
 
-  mp3__send_command(CYCLE_PLAY_FOLDER, num, 0x02);
-
-  /*
-  mp3__send_command(PLAY_FILE_WITH_FOLDER, 0x01, 0x01);
-  vTaskDelay(10000);
-  mp3__send_command(PAUSE, 0x00, 0x00);
-  vTaskDelay(1);
-  mp3__send_command(PLAY_FILE_WITH_FOLDER, 0x01, 0x02);
-  vTaskDelay(500);
-  mp3__send_command(PAUSE, 0x00, 0x00);
-  mp3__send_command(PLAY_FILE_WITH_FOLDER, 0x01, 0x01);
-  vTaskDelay(10000);
-  mp3__send_command(PAUSE, 0x00, 0x00);
-  // mp3__send_command(RESUME_PLAYBACK, 0x00, 0x00);
-  mp3__send_command(PLAY_FILE_WITH_FOLDER, 0x01, 0x02);
-  */
-}
-
-void mp3_play_sound(int num) { mp3__send_command(PLAY_FILE_WITH_FOLDER, 0x01, num); }
+void mp3_play_sound(int num) { mp3__send_command(PLAY_FILE_WITH_FOLDER, 0x02, num); }
 
 void mp3_play_jump_up_sound() {
-  mp3_play_sound(2);
+  mp3_play_sound(1);
   vTaskDelay(50);
 }
 
 void mp3_play_spring_sound() {
-  mp3_play_sound(3);
+  mp3_play_sound(2);
   vTaskDelay(50);
 }
 
 void mp3_play_collision_with_enemy_sound() {
-  mp3_play_sound(4);
-  vTaskDelay(50);
+  mp3_play_sound(5);
+  vTaskDelay(70);
 }
 
-void mp3_play_game_over_song() { mp3_play(7); }
+void mp3_play_shoot_gun_sound() {
+  mp3_play_sound(4);
+  vTaskDelay(100);
+}
+
+void mp3_play_monster_chomp_sound() {
+  mp3_play_sound(6);
+  vTaskDelay(10);
+}
+
+void mp3_play_game_over_song() { mp3_play_sound(7); }
 
 void mp3_play_level1_song() { mp3_play(1); }
-void mp3_play_level2_song() { mp3_play(1); }
+void mp3_play_level2_song() {
+  mp3__send_command(SET_VOL, 0x00, 0x1E);
+  mp3_play(3);
+}
 void mp3_play_start_song() { mp3_play(1); }
 
 void create_mp3_task() {

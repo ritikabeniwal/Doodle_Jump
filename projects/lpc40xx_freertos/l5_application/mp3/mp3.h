@@ -17,3 +17,5 @@ void mp3_play_jump_up_sound();
 void mp3_play_spring_sound();
 void mp3_play_collision_with_enemy_sound();
 void mp3_play_game_over_song();
+void mp3_play_monster_chomp_sound();
+void mp3_play_shoot_gun_sound();

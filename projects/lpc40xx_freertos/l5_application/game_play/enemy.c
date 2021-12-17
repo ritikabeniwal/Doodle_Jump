@@ -7,6 +7,7 @@
 #include "led_matrix_draw_alphabets.h"
 #include "led_matrix_draw_objects.h"
 #include "led_matrix_driver.h"
+#include "mp3.h"
 #include "task.h"
 #include <stdbool.h>
 
@@ -50,6 +51,7 @@ bool check_gun_collision_with_enemy(int gun_row, int gun_col) {
     //        jumper_row, jumper_col, row_diff, col_diff, enemies_row[i], enemies_col[i], i);
     if (((row_diff >= -(GUN_LENGTH)) && (row_diff <= (GUN_LENGTH))) &&
         ((gun_col >= enemies_col[i]) && ((gun_col <= enemies_col[i] + ENEMY_LENGTH)))) {
+      mp3_play_monster_chomp_sound();
       clear_enemy(enemies_row[i], enemies_col[i]);
       enemies_row[i] = -1;
       enemies_col[i] = -1;

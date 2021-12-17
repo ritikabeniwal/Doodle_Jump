@@ -23,15 +23,15 @@ uint8_t enemy_color[ENEMY_LENGTH][ENEMY_WIDTH] = {
 */
 uint8_t enemy[ENEMY_LENGTH] = {0x11, 0x0E, 0x0E, 0x04, 0x0A};
 uint8_t enemy_color[ENEMY_LENGTH][ENEMY_WIDTH] = {
-    {GREEN, OFF, OFF, OFF, GREEN}, {OFF, GREEN, GREEN, GREEN, OFF}, {OFF, GREEN, GREEN, GREEN, OFF},
-    {OFF, OFF, GREEN, OFF, OFF},   {OFF, GREEN, OFF, GREEN, OFF},
+    {GREEN, OFF, OFF, OFF, GREEN}, {OFF, YELLOW, YELLOW, YELLOW, OFF}, {OFF, YELLOW, YELLOW, YELLOW, OFF},
+    {OFF, OFF, RED, OFF, OFF},     {OFF, GREEN, OFF, GREEN, OFF},
 };
 uint8_t gun_shot[GUN_LENGTH] = {0x1, 0x1, 0x1, 0x1};
 uint8_t gun_shot_color[GUN_LENGTH][GUN_WIDTH] = {
-    {BLUE},
-    {BLUE},
-    {BLUE},
-    {BLUE},
+    {RED},
+    {RED},
+    {RED},
+    {RED},
 };
 
 void draw_jumper(int row, int col) {

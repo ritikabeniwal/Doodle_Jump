@@ -42,7 +42,7 @@ static int delay_time_ms = LEVEL1_DELAY_TIME_STANDARD;
 static bool enemy_task_started = 0;
 static uint32_t score_increment = LEVEL1_SCORE_INCREMENT;
 static bool end_game_sound_played = 0;
-bool game_over = 0;
+volatile bool game_over = 0;
 
 void jumper_fall(int row, int col) {
   clear_jumper(row, col);
@@ -59,19 +59,19 @@ void jumper_fall(int row, int col) {
 
 void end_game() {
   game_over = 1;
+  mp3_play_game_over_song();
 
   if (!end_game_sound_played) {
-    mp3_play_collision_with_enemy_sound();
   }
-  vTaskDelay(100);
+  vTaskDelay(200);
   led_matrix__clear_data_buffer();
   // fprintf(stderr, "Game over\n");
-  // mp3_play_game_over_song();
-  led_matrix_draw_alphabets_print_string("GAME OVER", 15, 8, BLUE);
-  led_matrix_draw_alphabets_print_string("SCORE ", 25, 8, GREEN);
-  led_matrix_print_digits_string(score, 25, 40, MAGENTA);
-  led_matrix_draw_alphabets_print_string("LEVEL ", 35, 8, MAGENTA);
-  led_matrix_print_digits_string(level + 1, 35, 40, GREEN);
+  led_matrix_draw_alphabets_print_string("GAME OVER", 10, 8, YELLOW);
+  led_matrix_draw_alphabets_print_string("SCORE ", 23, 8, MAGENTA);
+  led_matrix_print_digits_string(score, 23, 40, MAGENTA);
+  led_matrix_draw_alphabets_print_string("PRESS", 33, 15, RED);
+  led_matrix_draw_alphabets_print_string("BUTTON", 43, 12, RED);
+  // led_matrix_print_digits_string(level + 1, 35, 40, GREEN);
   while (1) {
     vTaskDelay(10000);
   }
@@ -244,10 +244,16 @@ void shoot_gun(int row, int col) {
   data = get_joystick_data();
   //  fprintf(stderr, "y value = %d \n", data.s_y);
   if (data.s_y > 4000) {
-    while (1) {
+    mp3_play_shoot_gun_sound();
+    level1_song_played = 0;
+    level2_song_played = 0;
+    while (1 & !game_over) {
       draw_gun(gun_row, gun_col);
-      vTaskDelay(200);
+      vTaskDelay(75);
       if (check_gun_collision_with_enemy(gun_row, gun_col)) {
+        mp3_play_monster_chomp_sound();
+        //  level1_song_played = 0;
+        //  level2_song_played = 0;
         xSemaphoreTake(score_mutex, portMAX_DELAY);
         score += ENEMY_KILL_INCREMENT;
         xSemaphoreGive(score_mutex);
